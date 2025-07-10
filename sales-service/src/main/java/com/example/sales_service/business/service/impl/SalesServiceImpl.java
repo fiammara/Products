@@ -19,14 +19,13 @@ import java.util.Optional;
 public class SalesServiceImpl implements SalesService {
 
 
-
     private final ProductRepository productRepository;
     private final ProductMapStructMapper productMapper;
     private final Validator validator;
     private final WebClient webClient;
 
     public SalesServiceImpl(ProductRepository productRepository,
-                            ProductMapStructMapper productMapper, Validator validator, WebClient webClient ) {
+                            ProductMapStructMapper productMapper, Validator validator, WebClient webClient) {
         this.productRepository = productRepository;
         this.productMapper = productMapper;
         this.validator = validator;
@@ -35,13 +34,12 @@ public class SalesServiceImpl implements SalesService {
 
 
     public void updateProductQuantity(Product product) {
-        //   product.setQuantity(product.getQuantity() - 1);
-        //   productRepository.saveAndFlush(product);
         productRepository.save(productMapper.productToDAO(product));
     }
 
 
     public void sellProductById(Long id) {
+
         Product product = findProductById(id)
             .orElseThrow(() -> new ProductNotFoundException(id));
 

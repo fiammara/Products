@@ -3,6 +3,8 @@ package com.example.products.web;
 
 import com.example.products.model.Product;
 
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,24 +15,30 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientRequestException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-
+import java.util.logging.Logger;
 
 
 @Controller
 public class UIController {
 
 
-    private final WebClient webClient;
+    private final WebClient productClient;
+    private final WebClient salesClient;
 
-    public UIController(WebClient.Builder webClientBuilder) {
-            this.webClient = webClientBuilder.baseUrl("http://localhost:8081").build();
-
+    public UIController(
+        @Qualifier("productClient") WebClient productClient,
+        @Qualifier("salesClient")  WebClient salesClient
+    ) {
+        this.productClient = productClient;
+        this.salesClient   = salesClient;
     }
+
 
 
     @GetMapping("/")
@@ -38,7 +46,7 @@ public class UIController {
                                      @RequestParam(required = false) String error,
                                      Model model) {
 
-        List<Product> productList = webClient.get()
+        List<Product> productList = productClient.get()
             .uri("/products")
             .retrieve()
             .bodyToFlux(Product.class)
@@ -62,7 +70,7 @@ public class UIController {
         String errorMessage = null;
 
         try {
-            sortedList = webClient.get()
+            sortedList = productClient.get()
                 .uri("http://localhost:8081/products/sorted-by-name")
                 .retrieve()
                 .bodyToFlux(Product.class)
@@ -96,7 +104,7 @@ public class UIController {
                                                         @RequestParam(required = false) String error,
                                                         Model model) {
 
-        List<Product> sortedList = webClient.get()
+        List<Product> sortedList = productClient.get()
             .uri("http://localhost:8081/products/sorted-by-description")
             .retrieve()
             .bodyToFlux(Product.class)
@@ -113,7 +121,7 @@ public class UIController {
     public String displayProductListSortedByCategory(@RequestParam(required = false) String message,
                                                      @RequestParam(required = false) String error,
                                                      Model model) {
-        List<Product> sortedList = webClient.get()
+        List<Product> sortedList = productClient.get()
             .uri("http://localhost:8081/products/sort-product-by-category")
             .retrieve()
             .bodyToFlux(Product.class)
@@ -130,7 +138,7 @@ public class UIController {
     public String displayProductListSortedByPrice(@RequestParam(required = false) String message,
                                                   @RequestParam(required = false) String error,
                                                   Model model) {
-        List<Product> sortedList = webClient.get()
+        List<Product> sortedList = productClient.get()
             .uri("http://localhost:8081/products/sort-product-by-price")
             .retrieve()
             .bodyToFlux(Product.class)
@@ -148,7 +156,7 @@ public class UIController {
 
         try {
 
-            webClient.delete()
+            productClient.delete()
                 .uri("http://localhost:8081/products/{id}", id)
                 .retrieve()
                 .bodyToMono(Void.class)
@@ -165,22 +173,40 @@ public class UIController {
     }
 
     @GetMapping("/sell-product/{id}")
-    public String sellProduct(@PathVariable Long id) {
+    public String sellProduct(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+
         try {
-            webClient.post()
-                .uri("/products/sell/{id}", id)
+
+            salesClient.post()
+                .uri("http://localhost:8082/sales/sell-product/{id}", id)
                 .retrieve()
                 .bodyToMono(Void.class)
                 .block();
 
-            return "redirect:/?message=PRODUCT_SOLD_SUCCESS";
-        } catch (WebClientResponseException e) {
-            return "redirect:/?message=PRODUCT_SOLD_FAILED&error=" + e.getResponseBodyAsString();
-        } catch (Exception e) {
-            return "redirect:/?message=PRODUCT_SOLD_FAILED&error=Unexpected error occurred";
-        }
-    }
 
+        } catch (WebClientResponseException e) {
+            // Parse error message JSON from sales service
+            String errorMessage;
+            try {
+                errorMessage = e.getResponseBodyAsString();
+                // The body is JSON like {"error":"message"}, parse to extract 'error'
+                // Simple parsing (you can use a JSON parser like Jackson here)
+                int start = errorMessage.indexOf(":\"") + 2;
+                int end = errorMessage.indexOf("\"", start);
+                errorMessage = errorMessage.substring(start, end);
+            } catch (Exception parseEx) {
+                errorMessage = "Unknown error occurred";
+            }
+
+            redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
+        } catch (Exception e) {
+
+            redirectAttributes.addFlashAttribute("errorMessage", "Unexpected error occurred");
+        }
+
+        // Redirect back to home page, optionally showing error if any
+        return "redirect:/";
+    }
     @GetMapping("/add-product")
     public String displayAddProductPage(Model model) {
         model.addAttribute("product", new Product());
@@ -191,7 +217,7 @@ public class UIController {
     @PostMapping("/add-product")
     public String createProduct(@ModelAttribute Product product) {
         try {
-            webClient.post()
+            productClient.post()
                 .uri("http://localhost:8081/products/add-product")
                 .bodyValue(product)
                 .retrieve()
@@ -208,7 +234,7 @@ public class UIController {
     @GetMapping("/edit/{id}")
     public String showEditProductPage(@PathVariable Long id, Model model) {
         try {
-            Product product = webClient.get()
+            Product product = productClient.get()
                 .uri("/products/{id}", id)
                 .retrieve()
                 .bodyToMono(Product.class)
@@ -228,7 +254,7 @@ public class UIController {
         try {
             product.setId(id);
 
-            webClient.put()
+            productClient.put()
                 .uri("http://localhost:8081/products/products/{id}", id)
                 .bodyValue(product)
                 .retrieve()
@@ -272,7 +298,7 @@ public class UIController {
     public String search(@RequestParam(required = false) String keyword, Model model) {
 
         try {
-            List<Product> productList = webClient.get()
+            List<Product> productList = productClient.get()
                 .uri("http://localhost:8081/products/search?keyword={keyword}", keyword)
                     .retrieve()
                     .bodyToFlux(Product.class)

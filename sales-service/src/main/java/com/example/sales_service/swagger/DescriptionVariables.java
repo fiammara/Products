@@ -4,6 +4,7 @@ public class DescriptionVariables {
 
 
     public static final String PRODUCT = "Product Controller";
+    public static final String SALES = "Sales Controller";
     public static final String NON_NULL_MAX_LONG = "Required non-null value. Starting from 1 to Long.MAX_VALUE";
     public static final String MAX_LONG_RANGE = "range[1, 9223372036854775807]";
 
