@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Product Management RRB</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" ></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.min.js" integrity="sha384-Atwg2Pkwv9vp0ygtn1JAojH0nYbwNJLPhwyoVbhoPwBhjQPR5VtM2+xf0Uwh9KtT" crossorigin="anonymous"></script>
+</head>
+<body>
+<header th:replace="~{fragments/header.html :: shared_header}"></header>
+
+<main>
+    <div class="container">
+        <h3>List of products</h3>
+
+        <div class="row">
+            <form th:action="@{/search}" method="get">
+                <input type="text" name="keyword" th:value="${keyword}" placeholder="Search for product">
+                <button class="btn btn-outline-secondary" type="submit">Search</button>
+                <button class="btn btn-outline-secondary" type="submit">Reset</button>
+            </form>
+        </div>
+
+        <div class="row">
+
+
+            <div th:each="product: ${productList}" class="col-md-2 d-flex">
+                <div class="card">
+                    <div>
+
+                        <img th:src="${product.category != null and product.category.name() == 'SHOES' ? 'url_for_shoes' :
+              (product.category != null and product.category.name() == 'CLOTHES' ? 'url_for_clothes' : 'default_url')}"
+                             class="card-img-top" alt="..."/>
+
+                        <!--
+                        <img th:src="${(product.getCategory().toString()=='SHOES') ? 'https://thumbs.dreamstime.com/z/percent-off-golden-realistic-text-light-background-percent-off-golden-realistic-text-light-background-228871420.jpg?w=768' : 'https://media.istockphoto.com/id/1600489364/vector/up-to-10-percent-off-sale-discount-offer-price-sign-vector.jpg?s=612x612&w=0&k=20&c=lNaEE987b_WUj0AmS4flNufFt6ihNXsNDl0Ak0PBpAA='}" class="card-img-top" alt="..."/>
+                     <img th:src="${(product.getCategory().toString()=='SHOES') ? 'https://media.istockphoto.com/id/1419178365/vector/black-friday-give-big-discount-sale-for-all-products-with-gift-box-or-marketing-price-tag-in.jpg?s=612x612&w=0&k=20&c=-9sRd4YZGOHfWvFvt_DLGhn-11SZUz4LbWkyrgTfV14=' : 'https://media.istockphoto.com/id/1426989676/vector/10-off-discount-10-percent-red-banner-with-yellow-floating-balloon-for-promotions-and-offers.webp?s=1024x1024&w=is&k=20&c=KCJ3Gl92S1QXbQ-_pbRAHHYh5zEUzVIwSo79X2Fyhn8='}" class="card-img-top" alt="..."/>
+
+                       -->
+                    </div>
+
+                    <div class="card-body row ">
+                        <h5 class="card-title" th:text="${product.name}"></h5>
+                        <p class="padding-0">Description: <span th:text="${product.getDescription()}"></span></p>
+                        <p class="padding-0">Category: <span th:text="${product.getCategory()}"></span></p>
+                        <p class="padding-0">Price: <span th:text="${product.getPrice()}"></span> Eur</p>
+                        <p class="padding-0">Left in store: <span th:text="${product.getQuantity()}"></span></p>
+                        <p class="padding-0">Sold: <span
+                                th:text="${product.getInitial_quantity()-product.getQuantity()}"></span></p>
+
+                        <form>
+                            <a th:href="${'/delete/' + product.getId()}" class="btn btn-danger"
+                               role="button">&#10008;</a>
+                            <a th:href="${'/edit/' + product.getId()}" class="btn btn-primary" role="button">&#9998;</a>
+                            <a th:href="${'/sell-product/' + product.getId()}" th:if="${product.getQuantity() != 0}"
+                               class="btn btn-success" role="button">Sell</a>
+
+
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+</main>
+
+<footer th:replace="~{fragments/footer.html :: footer}"></footer>
+
+</body>
+</html>

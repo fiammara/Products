@@ -1,0 +1,23 @@
+<header th:fragment = "shared_header" class="container-fluid bg-black text-white p-3 mb-3 text-center">
+  <h1> Product Management Ramune Rasa Baiba </h1>
+  <nav>
+    <nav>
+      <a class="btn btn-light" href="/add-product"> Add Product </a>
+      <a class="btn btn-light" href="/"> View Products </a>
+
+      <div class="dropdown">
+        <button class="btn btn-light m-1" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+          Sort Products By
+        </button>
+        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+          <li><a class="dropdown-item" href="/sort-product">NAME</a></li>
+          <li><a class="dropdown-item" href="/sort-product-by-description">DESCRIPTION</a></li>
+          <li><a class="dropdown-item" href="/sort-product-by-category">CATEGORY</a></li>
+          <li><a class="dropdown-item" href="/sort-product-by-price">PRICE</a></li>
+        </ul>
+      </div>
+      </ul>
+      </div>
+    </nav>
+  </nav>
+</header>

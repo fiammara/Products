@@ -1,0 +1,6 @@
+
+w	java:S116""[Rename this field "initial_quantity" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ıé±Ë8ú¨‰îş2
+a
+java:S1128"DRemove this unused import 'jakarta.validation.constraints.NotEmpty'.(µÇî±8òªÆíş2
+g
+java:S1128"ERemove this unused import 'org.springframework.stereotype.Component'.(Ş÷Ñ¸ÿÿÿÿÿ8«Ã˜ÿ2

@@ -267,12 +267,12 @@ public class ProductControllerTest {
 
 
     private List<Product> createProductList() {
-        List<Product> trainingList = new ArrayList<>();
+        List<Product> productList = new ArrayList<>();
         Product product1 = createProduct();
         Product product2 = createProduct();
-        trainingList.add(product1);
-        trainingList.add(product2);
-        return trainingList;
+        productList.add(product1);
+        productList.add(product2);
+        return productList;
     }
     private Product createProduct() {
         Product product = new Product();
