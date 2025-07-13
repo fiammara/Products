@@ -38,7 +38,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(MockitoExtension.class)
 
 public class ProductControllerTest {
-    public static String URL = "/products";
+    public static String URL = "/api/products";
 
     @Autowired
     private MockMvc mockMvc;

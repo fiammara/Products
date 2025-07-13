@@ -44,12 +44,12 @@
 
                     <div class="card-body row ">
                         <h5 class="card-title" th:text="${product.name}"></h5>
-                        <p class="padding-0">Description: <span th:text="${product.getDescription()}"></span></p>
-                        <p class="padding-0">Category: <span th:text="${product.getCategory()}"></span></p>
-                        <p class="padding-0">Price: <span th:text="${product.getPrice()}"></span> Eur</p>
-                        <p class="padding-0">Left in store: <span th:text="${product.getQuantity()}"></span></p>
+                        <p class="padding-0">Description: <span th:text="${product.description}"></span></p>
+                        <p class="padding-0">Category: <span th:text="${product.category}"></span></p>
+                        <p class="padding-0">Price: <span th:text="${product.price}"></span> Eur</p>
+                        <p class="padding-0">Left in store: <span th:text="${product.quantity}"></span></p>
                         <p class="padding-0">Sold: <span
-                                th:text="${product.getInitial_quantity()-product.getQuantity()}"></span></p>
+                                th:text="${product.getInitialQuantity()-product.getQuantity()}"></span></p>
 
                         <form>
                             <a th:href="${'/delete/' + product.getId()}" class="btn btn-danger"

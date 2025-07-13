@@ -22,7 +22,7 @@ import java.util.Map;
 
 @Api(tags = {DescriptionVariables.SALES})
 @RestController
-@RequestMapping("/sales")
+@RequestMapping("api/sales")
 public class SalesController {
     @Autowired
     private SalesService productService;

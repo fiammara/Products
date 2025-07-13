@@ -2,9 +2,8 @@ package com.example.products.web;
 
 
 import com.example.products.model.Product;
-
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,50 +14,53 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientRequestException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import reactor.core.publisher.Mono;
+
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.logging.Logger;
-
 
 @Controller
 public class UIController {
 
-
+    @Value("${PRODUCT_SERVICE_URL}")
+    private String productServiceUrl;
     private final WebClient productClient;
-    private final WebClient salesClient;
+
+   // @Value("${SALES_SERVICE_URL}")
+ //   private String salesServiceUrl;
+ //   private final WebClient salesClient;
 
     public UIController(
-        @Qualifier("productClient") WebClient productClient,
-        @Qualifier("salesClient")  WebClient salesClient
+        @Qualifier("productClient") WebClient productClient
+     //   @Qualifier("salesClient") WebClient salesClient
     ) {
         this.productClient = productClient;
-        this.salesClient   = salesClient;
+     //   this.salesClient = salesClient;
     }
 
-
-
     @GetMapping("/")
-    public String displayProductList(@RequestParam(required = false) String message,
-                                     @RequestParam(required = false) String error,
-                                     Model model) {
-
-        List<Product> productList = productClient.get()
-            .uri("/products")
+    public Mono<String> displayProductList(Model model) {
+        return productClient.get()
+            .uri(productServiceUrl)
             .retrieve()
             .bodyToFlux(Product.class)
             .collectList()
-            .block();
-
-
-        model.addAttribute("message", message);
-        model.addAttribute("error", error);
-        model.addAttribute("productList", productList);
-        return "productList";
+            .doOnError(e -> {
+                // Log error, add error message to model if needed
+                System.err.println("Error fetching products: " + e.getMessage());
+            })
+            .onErrorReturn(Collections.emptyList())  // fallback to empty list on error
+            .map(products -> {
+                model.addAttribute("productList", products);
+                return "productList";
+            });
     }
+
+
 
     @GetMapping("/sort-product")
     public String displayProductListSortedByName(@RequestParam(required = false) String message,
@@ -71,7 +73,7 @@ public class UIController {
 
         try {
             sortedList = productClient.get()
-                .uri("http://localhost:8081/products/sorted-by-name")
+                .uri("/products/sorted-by-name")
                 .retrieve()
                 .bodyToFlux(Product.class)
                 .collectList()
@@ -105,7 +107,7 @@ public class UIController {
                                                         Model model) {
 
         List<Product> sortedList = productClient.get()
-            .uri("http://localhost:8081/products/sorted-by-description")
+            .uri(productServiceUrl + "/sorted-by-description")
             .retrieve()
             .bodyToFlux(Product.class)
             .collectList()
@@ -122,7 +124,7 @@ public class UIController {
                                                      @RequestParam(required = false) String error,
                                                      Model model) {
         List<Product> sortedList = productClient.get()
-            .uri("http://localhost:8081/products/sort-product-by-category")
+            .uri(productServiceUrl + "/sort-product-by-category")
             .retrieve()
             .bodyToFlux(Product.class)
             .collectList()
@@ -139,7 +141,7 @@ public class UIController {
                                                   @RequestParam(required = false) String error,
                                                   Model model) {
         List<Product> sortedList = productClient.get()
-            .uri("http://localhost:8081/products/sort-product-by-price")
+            .uri(productServiceUrl + "/sort-product-by-price")
             .retrieve()
             .bodyToFlux(Product.class)
             .collectList()
@@ -157,7 +159,7 @@ public class UIController {
         try {
 
             productClient.delete()
-                .uri("http://localhost:8081/products/{id}", id)
+                .uri("/products/{id}", id)
                 .retrieve()
                 .bodyToMono(Void.class)
                 .block();
@@ -172,13 +174,13 @@ public class UIController {
         }
     }
 
-    @GetMapping("/sell-product/{id}")
+ /*   @GetMapping("/sell-product/{id}")
     public String sellProduct(@PathVariable Long id, RedirectAttributes redirectAttributes) {
 
         try {
 
             salesClient.post()
-                .uri("http://localhost:8082/sales/sell-product/{id}", id)
+                .uri("/sales/sell-product/{id}", id)
                 .retrieve()
                 .bodyToMono(Void.class)
                 .block();
@@ -207,6 +209,7 @@ public class UIController {
         // Redirect back to home page, optionally showing error if any
         return "redirect:/";
     }
+*/
     @GetMapping("/add-product")
     public String displayAddProductPage(Model model) {
         model.addAttribute("product", new Product());
@@ -218,7 +221,7 @@ public class UIController {
     public String createProduct(@ModelAttribute Product product) {
         try {
             productClient.post()
-                .uri("http://localhost:8081/products/add-product")
+                .uri(productServiceUrl + "/add-product")
                 .bodyValue(product)
                 .retrieve()
                 .bodyToMono(Product.class)
@@ -255,7 +258,7 @@ public class UIController {
             product.setId(id);
 
             productClient.put()
-                .uri("http://localhost:8081/products/products/{id}", id)
+                .uri("/products/products/{id}", id)
                 .bodyValue(product)
                 .retrieve()
                 .bodyToMono(Void.class)
@@ -269,41 +272,17 @@ public class UIController {
         }
     }
 
-  /*  @GetMapping(value = "filters")
 
-    public String findProductByName(@RequestParam(value = "name", required = true) String name, Model model) {
-        try {
-            List<Product> products = webClient.get()
-                .uri(uriBuilder -> uriBuilder
-                    .path("/products/search")
-                    .queryParam("name", name)
-                    .build())
-                .retrieve()
-                .bodyToFlux(Product.class)
-                .collectList()
-                .block();
-
-            model.addAttribute("search", products);
-            return "filters";
-        } catch (WebClientResponseException e) {
-            model.addAttribute("error", "Error fetching products: " + e.getResponseBodyAsString());
-            return "filters";
-        } catch (Exception e) {
-            model.addAttribute("error", "Unexpected error occurred");
-            return "filters";
-        }
-    }
-*/
     @GetMapping("/search")
     public String search(@RequestParam(required = false) String keyword, Model model) {
 
         try {
             List<Product> productList = productClient.get()
-                .uri("http://localhost:8081/products/search?keyword={keyword}", keyword)
-                    .retrieve()
-                    .bodyToFlux(Product.class)
-                    .collectList()
-                    .block();
+                .uri("/products/search?keyword={keyword}", keyword)
+                .retrieve()
+                .bodyToFlux(Product.class)
+                .collectList()
+                .block();
 
             model.addAttribute("productList", productList);
             model.addAttribute("keyword", keyword);
@@ -316,5 +295,5 @@ public class UIController {
             return "productList";
         }
     }
-
 }
+

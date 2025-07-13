@@ -31,7 +31,7 @@ public class ProductDAO {
     @Column(name = "quantity")
     private int quantity;
     @Column(name = "initial_quantity")
-    private int initial_quantity;
+    private int initialQuantity;
     @Column(name = "price")
     private double price;
     @Column(name = "category")
