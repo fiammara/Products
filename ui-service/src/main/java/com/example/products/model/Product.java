@@ -23,7 +23,7 @@ public class Product {
 
     private int quantity;
 
-    private int initial_quantity;
+    private int initialQuantity;
 
     private double price;
 

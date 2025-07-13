@@ -46,8 +46,6 @@ public class ProductServiceImpl implements ProductService {
 
         List<ProductDAO> productDAOList = productRepository.findAll();
         log.info("Got product list. Size is: {}", productDAOList::size);
-        log.info("Got product list. Name is: {}", productDAOList.get(0).getName());
-        System.out.println(productDAOList.get(0).getName());
         return productDAOList.stream()
             .map(productMapper::productDAOToProduct)
             .collect(Collectors.toList());
@@ -101,7 +99,7 @@ public class ProductServiceImpl implements ProductService {
         }
 
         ProductDAO productDAOSaved = productRepository.save(productMapper.productToDAO(product));
-        product.setQuantity(product.getInitial_quantity());
+        product.setQuantity(product.getInitialQuantity());
         log.info("Repository saved product DAO: {}", productDAOSaved);
         return productMapper.productDAOToProduct(productDAOSaved);
 

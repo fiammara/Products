@@ -20,7 +20,7 @@ public interface ProductService {
 
     List<Product> getProductsSortedByCategory();
 
-    Product createProduct(Product product) throws Exception;
+  //  Product createProduct(Product product) throws Exception;
 
     Optional<Product> findProductById(Long id) throws Exception;
 
@@ -28,7 +28,7 @@ public interface ProductService {
 
     void updateProductQuantity(Product product);
 
-    Product updateProduct(Product product) throws Exception;
+  //  Product updateProduct(Product product) throws Exception;
 
     Optional<Product> findProductByName(String name);
 

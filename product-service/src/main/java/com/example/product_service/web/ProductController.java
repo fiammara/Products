@@ -145,6 +145,7 @@ public class ProductController {
         productService.deleteProduct(id);
         return ResponseEntity.noContent().build();
     }
+    /*
     @ApiOperation(value = "Create a new product",
         notes = "Creates a new product and returns the created entity.")
     @ApiResponses({
@@ -184,6 +185,6 @@ public class ProductController {
         return productService.findProductsByKeyword(keyword);
     }
 
-
+*/
 
 }

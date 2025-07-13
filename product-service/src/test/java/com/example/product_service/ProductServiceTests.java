@@ -82,7 +82,7 @@ public class ProductServiceTests {
         product.setName("Sample Product");
         product.setDescription("New modern");
         product.setQuantity(10);
-        product.setInitial_quantity(10);
+        product.setInitialQuantity(10);
         product.setPrice(100.0);
         product.setCategory(Category.ACCESSORIES);
         return product;
@@ -253,7 +253,7 @@ public class ProductServiceTests {
     void createProduct_withValidProduct_shouldSaveAndReturnProduct() {
 
         Product inputProduct = new Product();
-        inputProduct.setInitial_quantity(10);
+        inputProduct.setInitialQuantity(10);
         inputProduct.setQuantity(0);
 
         ProductDAO daoToSave = new ProductDAO();
@@ -270,7 +270,7 @@ public class ProductServiceTests {
 
 
         assertEquals(mappedProduct, result);
-        assertEquals(inputProduct.getInitial_quantity(), inputProduct.getQuantity());
+        assertEquals(inputProduct.getInitialQuantity(), inputProduct.getQuantity());
         verify(validator).validate(inputProduct);
         verify(repository).save(daoToSave);
         verify(mapper).productDAOToProduct(savedDAO);

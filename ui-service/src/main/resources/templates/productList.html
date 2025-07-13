@@ -49,7 +49,7 @@
                         <p class="padding-0">Price: <span th:text="${product.price}"></span> Eur</p>
                         <p class="padding-0">Left in store: <span th:text="${product.quantity}"></span></p>
                         <p class="padding-0">Sold: <span
-                                th:text="${product.getInitialQuantity()-product.getQuantity()}"></span></p>
+                                th:text="${product.initialQuantity - product.quantity}"></span></p>
 
                         <form>
                             <a th:href="${'/delete/' + product.getId()}" class="btn btn-danger"

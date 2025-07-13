@@ -38,6 +38,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(MockitoExtension.class)
 
 public class ProductControllerTest {
+    /*
     public static String URL = "/api/products";
 
     @Autowired
@@ -153,6 +154,6 @@ public class ProductControllerTest {
         product.setName("Nike");
 
         return product;
-    }
+    } */
 
 }

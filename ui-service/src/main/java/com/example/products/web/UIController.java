@@ -50,10 +50,10 @@ public class UIController {
             .bodyToFlux(Product.class)
             .collectList()
             .doOnError(e -> {
-                // Log error, add error message to model if needed
+
                 System.err.println("Error fetching products: " + e.getMessage());
             })
-            .onErrorReturn(Collections.emptyList())  // fallback to empty list on error
+            .onErrorReturn(Collections.emptyList())
             .map(products -> {
                 model.addAttribute("productList", products);
                 return "productList";
