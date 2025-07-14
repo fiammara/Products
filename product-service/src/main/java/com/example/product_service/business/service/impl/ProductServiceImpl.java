@@ -125,8 +125,7 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     public void updateProductQuantity(Product product) {
         product.setQuantity(product.getQuantity() - 1);
-        productRepository.save(productMapper.productToDAO(product));
-        productRepository.flush();
+        productRepository.saveAndFlush(productMapper.productToDAO(product));
     }
 
 
@@ -185,7 +184,7 @@ public class ProductServiceImpl implements ProductService {
                     throw new InsufficientStockException(id);
                 }
 
-                product.setQuantity(product.getQuantity() - 1);
+              //  product.setQuantity(product.getQuantity() - 1);
                 updateProductQuantity(product);
 
                 System.out.println("✅ Product sold: " + id);

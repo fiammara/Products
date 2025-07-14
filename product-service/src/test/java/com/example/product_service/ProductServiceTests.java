@@ -494,7 +494,7 @@ public class ProductServiceTests {
         assertThrows(ProductNotFoundException.class, () -> service.sellProductById(id));
     } */
 
-  /*  @Test
+    @Test
     void sellProductById_success() {
         Product product = new Product();
         product.setId(existingProductId);
@@ -507,7 +507,7 @@ public class ProductServiceTests {
         assertEquals(4, product.getQuantity());
         verify(service).updateProductQuantity(product);
     }
-*/
+
     @Test
     void sellProductById_productNotFound() {
         when(repository.findById(missingProductId)).thenReturn(Optional.empty());

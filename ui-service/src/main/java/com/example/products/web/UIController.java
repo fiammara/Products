@@ -201,7 +201,7 @@ public class UIController {
 
         }
 
-        return "redirect:/";
+        return "redirect:/?message=PRODUCT_SOLD_SUCCESS";
     }
 
     @GetMapping("/add-product")

@@ -13,7 +13,7 @@ VALUES (
     'Modern',
     'Our second product.',
     200,
-    150,
+    200,
     50.50,
     'CLOTHES',
     1
