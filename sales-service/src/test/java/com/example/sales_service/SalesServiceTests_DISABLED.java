@@ -25,7 +25,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 @Disabled
 @ExtendWith(MockitoExtension.class)
-class SalesServiceTests {
+class SalesServiceTests_DISABLED {
     @Mock
     private ProductRepository productRepository;
 
