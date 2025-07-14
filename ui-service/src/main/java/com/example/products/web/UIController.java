@@ -30,16 +30,16 @@ public class UIController {
     private String productServiceUrl;
     private final WebClient productClient;
 
-   // @Value("${SALES_SERVICE_URL}")
- //   private String salesServiceUrl;
- //   private final WebClient salesClient;
+    @Value("${SALES_SERVICE_URL}")
+    private String salesServiceUrl;
+    private final WebClient salesClient;
 
     public UIController(
-        @Qualifier("productClient") WebClient productClient
-     //   @Qualifier("salesClient") WebClient salesClient
+        @Qualifier("productClient") WebClient productClient,
+        @Qualifier("salesClient") WebClient salesClient
     ) {
         this.productClient = productClient;
-     //   this.salesClient = salesClient;
+        this.salesClient = salesClient;
     }
 
     @GetMapping("/")
@@ -73,7 +73,7 @@ public class UIController {
 
         try {
             sortedList = productClient.get()
-                .uri("/products/sorted-by-name")
+                .uri(productServiceUrl + "/sorted-by-name")
                 .retrieve()
                 .bodyToFlux(Product.class)
                 .collectList()
@@ -159,7 +159,7 @@ public class UIController {
         try {
 
             productClient.delete()
-                .uri("/products/{id}", id)
+                .uri(productServiceUrl + "/{id}", id)
                 .retrieve()
                 .bodyToMono(Void.class)
                 .block();
@@ -174,25 +174,24 @@ public class UIController {
         }
     }
 
- /*   @GetMapping("/sell-product/{id}")
-    public String sellProduct(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+    @GetMapping("/sell-product/{id}")
+    public String sellProduct(@PathVariable Long id) {
 
         try {
 
             salesClient.post()
-                .uri("/sales/sell-product/{id}", id)
+                .uri(salesServiceUrl + "/sell-product/{id}", id)
                 .retrieve()
                 .bodyToMono(Void.class)
                 .block();
 
 
         } catch (WebClientResponseException e) {
-            // Parse error message JSON from sales service
+
             String errorMessage;
             try {
                 errorMessage = e.getResponseBodyAsString();
-                // The body is JSON like {"error":"message"}, parse to extract 'error'
-                // Simple parsing (you can use a JSON parser like Jackson here)
+
                 int start = errorMessage.indexOf(":\"") + 2;
                 int end = errorMessage.indexOf("\"", start);
                 errorMessage = errorMessage.substring(start, end);
@@ -200,16 +199,14 @@ public class UIController {
                 errorMessage = "Unknown error occurred";
             }
 
-            redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
+
         } catch (Exception e) {
 
-            redirectAttributes.addFlashAttribute("errorMessage", "Unexpected error occurred");
         }
 
-        // Redirect back to home page, optionally showing error if any
         return "redirect:/";
     }
-*/
+
     @GetMapping("/add-product")
     public String displayAddProductPage(Model model) {
         model.addAttribute("product", new Product());
@@ -238,7 +235,7 @@ public class UIController {
     public String showEditProductPage(@PathVariable Long id, Model model) {
         try {
             Product product = productClient.get()
-                .uri("/products/{id}", id)
+                .uri(productServiceUrl + "{id}", id)
                 .retrieve()
                 .bodyToMono(Product.class)
                 .block();
@@ -258,7 +255,7 @@ public class UIController {
             product.setId(id);
 
             productClient.put()
-                .uri("/products/products/{id}", id)
+                .uri(productServiceUrl + "/products/{id}", id)
                 .bodyValue(product)
                 .retrieve()
                 .bodyToMono(Void.class)
@@ -278,7 +275,7 @@ public class UIController {
 
         try {
             List<Product> productList = productClient.get()
-                .uri("/products/search?keyword={keyword}", keyword)
+                .uri(productServiceUrl + "/search?keyword={keyword}", keyword)
                 .retrieve()
                 .bodyToFlux(Product.class)
                 .collectList()

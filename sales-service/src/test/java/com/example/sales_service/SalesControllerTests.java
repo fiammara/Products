@@ -36,7 +36,7 @@ public class SalesControllerTests {
     void testSellProductSuccess() throws Exception {
         doNothing().when(service).sellProductById(productId);
 
-        mockMvc.perform(post("/sales/sell-product/{id}", productId)
+        mockMvc.perform(post("/api/sales/sell-product/{id}", productId)
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
     }
@@ -46,7 +46,7 @@ public class SalesControllerTests {
         String errorMessage = "Out of stock";
         doThrow(new IllegalStateException(errorMessage)).when(service).sellProductById(productId);
 
-        mockMvc.perform(post("/sales/sell-product/{id}", productId)
+        mockMvc.perform(post("/api/sales/sell-product/{id}", productId)
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isConflict())
             .andExpect(jsonPath("$.error").value(errorMessage));
@@ -56,7 +56,7 @@ public class SalesControllerTests {
     void testSellProductInternalError() throws Exception {
         doThrow(new RuntimeException("DB down")).when(service).sellProductById(productId);
 
-        mockMvc.perform(post("/sales/sell-product/{id}", productId)
+        mockMvc.perform(post("/api/sales/sell-product/{id}", productId)
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isInternalServerError())
             .andExpect(jsonPath("$.error").value("Unexpected error"));

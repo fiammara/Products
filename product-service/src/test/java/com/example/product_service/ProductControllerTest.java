@@ -38,7 +38,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(MockitoExtension.class)
 
 public class ProductControllerTest {
-    /*
+
     public static String URL = "/api/products";
 
     @Autowired
@@ -54,7 +54,7 @@ public class ProductControllerTest {
 
         when(service.getAllProducts()).thenReturn(productList);
 
-        this.mockMvc.perform(get("/products")
+        this.mockMvc.perform(get("/api/products")
                 .contentType(MediaType.APPLICATION_JSON))
             .andDo(print())
             .andExpect(status().isOk())
@@ -67,7 +67,7 @@ public class ProductControllerTest {
         Product mockProduct = createProduct();
         when(service.findProductById(1L)).thenReturn(Optional.of(mockProduct));
 
-        mockMvc.perform(get("/products/1")
+        mockMvc.perform(get("/api/products/1")
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.id").value(mockProduct.getId()))
@@ -79,7 +79,7 @@ public class ProductControllerTest {
     void shouldReturn404WhenProductNotFound() throws Exception {
         when(service.findProductById(999L)).thenReturn(Optional.empty());
 
-        mockMvc.perform(get("/products/999")
+        mockMvc.perform(get("/api/products/999")
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound());
     }
@@ -98,7 +98,7 @@ public class ProductControllerTest {
 
         when(service.createProduct(any(Product.class))).thenReturn(createdProduct);
 
-        mockMvc.perform(post("/products/add-product")
+        mockMvc.perform(post("/api/products/add-product")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(new ObjectMapper().writeValueAsString(productToCreate)))
             .andExpect(status().isOk())
@@ -111,7 +111,7 @@ public class ProductControllerTest {
     void shouldDeleteProductSuccessfully() throws Exception {
         doNothing().when(service).deleteProduct(1L);
 
-        mockMvc.perform(delete("/products/1")
+        mockMvc.perform(delete("/api/products/1")
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isNoContent());
     }
@@ -128,7 +128,7 @@ public class ProductControllerTest {
         when(service.findProductById(anyLong())).thenReturn(Optional.of(createdProduct));
 
         this.mockMvc.perform(MockMvcRequestBuilders
-                .put("/products/products/1")
+                .put("/api/products/products/1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json)
                 .accept(MediaType.APPLICATION_JSON))
@@ -154,6 +154,6 @@ public class ProductControllerTest {
         product.setName("Nike");
 
         return product;
-    } */
+    }
 
 }

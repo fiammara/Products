@@ -19,14 +19,14 @@ import java.util.Optional;
 public class SalesServiceImpl implements SalesService {
 
 
-    private final ProductRepository productRepository;
+    private final ProductRepository salesRepository;
     private final ProductMapStructMapper productMapper;
     private final Validator validator;
     private final WebClient webClient;
 
-    public SalesServiceImpl(ProductRepository productRepository,
+    public SalesServiceImpl(ProductRepository salesRepository,
                             ProductMapStructMapper productMapper, Validator validator, WebClient webClient) {
-        this.productRepository = productRepository;
+        this.salesRepository = salesRepository;
         this.productMapper = productMapper;
         this.validator = validator;
         this.webClient = webClient;
@@ -34,7 +34,7 @@ public class SalesServiceImpl implements SalesService {
 
 
     public void updateProductQuantity(Product product) {
-        productRepository.save(productMapper.productToDAO(product));
+        salesRepository.save(productMapper.productToDAO(product));
     }
 
 
@@ -54,7 +54,7 @@ public class SalesServiceImpl implements SalesService {
     public Optional<Product> findProductById(Long id) {
 
         Optional<Product> productOptional =
-            productRepository.findById(id).flatMap(product -> Optional.ofNullable(productMapper.productDAOToProduct(product)));
+            salesRepository.findById(id).flatMap(product -> Optional.ofNullable(productMapper.productDAOToProduct(product)));
 
         log.info("Product with id {} is {}", id, productOptional);
         return productOptional;

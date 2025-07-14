@@ -6,6 +6,7 @@ import com.example.products.web.UIController;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -29,7 +30,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 //@Import({UIController.class, UIControllerTest.MockConfig.class})
 
 public class UIControllerTest {
-/*
+    /*
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -59,15 +61,18 @@ public class UIControllerTest {
 
     @TestConfiguration
     static class MockConfig {
+
         @Bean
+        @Qualifier("productClient")
         public WebClient.Builder webClientBuilder() {
+            // Mock the WebClient and all the chained calls
             WebClient.Builder mockBuilder = mock(WebClient.Builder.class);
             WebClient mockWebClient = mock(WebClient.class);
             WebClient.RequestHeadersUriSpec uriSpec = mock(WebClient.RequestHeadersUriSpec.class);
             WebClient.RequestHeadersSpec headersSpec = mock(WebClient.RequestHeadersSpec.class);
             WebClient.ResponseSpec responseSpec = mock(WebClient.ResponseSpec.class);
 
-
+            // Sample products to be returned by the mock
             Product input1 = new Product();
             input1.setId(1L);
             input1.setPrice(100.0);
@@ -84,11 +89,13 @@ public class UIControllerTest {
 
             List<Product> products = List.of(input1, input2);
 
+            // Mock the fluent API calls on WebClient.Builder
             when(mockBuilder.baseUrl(anyString())).thenReturn(mockBuilder);
             when(mockBuilder.build()).thenReturn(mockWebClient);
 
+            // Mock the fluent API calls on WebClient
             when(mockWebClient.get()).thenReturn(uriSpec);
-            when(uriSpec.uri("/products")).thenReturn(headersSpec);
+            when(uriSpec.uri(anyString())).thenReturn(headersSpec);
             when(headersSpec.retrieve()).thenReturn(responseSpec);
             when(responseSpec.bodyToFlux(Product.class)).thenReturn(Flux.fromIterable(products));
 
@@ -97,6 +104,3 @@ public class UIControllerTest {
     } */
 
 }
-
-
-

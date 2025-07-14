@@ -22,10 +22,10 @@ import java.util.Map;
 
 @Api(tags = {DescriptionVariables.SALES})
 @RestController
-@RequestMapping("api/sales")
+@RequestMapping("/api/sales")
 public class SalesController {
     @Autowired
-    private SalesService productService;
+    private SalesService salesService;
 
     @ApiOperation(value = "Selling products",
         notes = "Performs a product sell operation ",
@@ -37,8 +37,10 @@ public class SalesController {
     })
     @PostMapping("/sell-product/{id}")
     public ResponseEntity<Object> sellProduct(@PathVariable Long id) {
+
         try {
-            productService.sellProductById(id);
+            salesService.sellProductById(id);
+
             return ResponseEntity.ok().build();
         } catch (IllegalStateException e) {
             Map<String, String> errorBody = Map.of("error", e.getMessage());
