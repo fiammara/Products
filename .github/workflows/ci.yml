@@ -49,7 +49,7 @@ jobs:
 
       - name: Run tests for sales-service
         working-directory: ./sales-service
-        run: mvn test -Dtest=**/*Test.java
+        run: mvn test -Dtest=**/*Test.java -Dsurefire.failIfNoSpecifiedTests=false
 
       - name: Tear down Docker Compose
         run: docker compose down
