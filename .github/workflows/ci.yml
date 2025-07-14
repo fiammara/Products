@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-product-service:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Start Docker Compose services
+        run: |
+          docker-compose up -d
+          # Wait for MySQL, Kafka, and other services to be ready
+          sleep 40
+
+      - name: Run tests for product-service
+        working-directory: ./product-service
+        run: mvn test -Dtest=**/*Test.java
+
+      - name: Tear down Docker Compose
+        run: docker-compose down
+
+  test-sales-service:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Start Docker Compose services
+        run: |
+          docker-compose up -d
+          sleep 40
+
+      - name: Run tests for sales-service
+        working-directory: ./sales-service
+        run: mvn test -Dtest=**/*Test.java
+
+      - name: Tear down Docker Compose
+        run: docker-compose down
+
+  test-ui-service:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Start Docker Compose services
+        run: |
+          docker-compose up -d
+          sleep 40
+
+      - name: Run tests for ui-service
+        working-directory: ./ui-service
+        run: mvn test -Dtest=**/*Test.java
+
+      - name: Tear down Docker Compose
+        run: docker-compose down
