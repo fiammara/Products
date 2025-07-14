@@ -8,6 +8,7 @@ import com.example.sales_service.business.repository.ProductRepository;
 import com.example.sales_service.business.repository.model.ProductDAO;
 import com.example.sales_service.business.service.impl.SalesServiceImpl;
 import com.example.sales_service.model.Product;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -22,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-/*
+@Disabled
 @ExtendWith(MockitoExtension.class)
 class SalesServiceTests {
     @Mock
@@ -35,14 +36,13 @@ class SalesServiceTests {
     private ProductMapStructMapper productMapper;
 
 
-
     private final Long existingProductId = 1L;
     private final Long missingProductId = 999L;
 
 
 
 
-    @Test
+ /*   @Test
     void sellProductById_success() {
         Product product = new Product();
         product.setId(existingProductId);
@@ -54,7 +54,7 @@ class SalesServiceTests {
 
         assertEquals(4, product.getQuantity());
         verify(salesService).updateProductQuantity(product);
-    }
+    } */
 
     @Test
     void sellProductById_productNotFound() {
@@ -62,7 +62,8 @@ class SalesServiceTests {
 
         ProductNotFoundException ex = assertThrows(ProductNotFoundException.class, () -> salesService.sellProductById(missingProductId));
 
-        assertTrue(ex.getMessage().contains(missingProductId.toString()));    }
+        assertTrue(ex.getMessage().contains(missingProductId.toString()));
+    }
 
     @Test
     void sellProductById_insufficientStock() {
@@ -78,9 +79,9 @@ class SalesServiceTests {
         InsufficientStockException ex = assertThrows(InsufficientStockException.class, () -> salesService.sellProductById(existingProductId));
 
         assertEquals("Not enough quantity to sell", ex.getMessage());
-    } */
+    }
 
-
+}
 
 
 
