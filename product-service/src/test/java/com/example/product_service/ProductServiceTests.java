@@ -1,6 +1,8 @@
 package com.example.product_service;
 
 
+import com.example.product_service.business.handlers.InsufficientStockException;
+import com.example.product_service.business.handlers.ProductNotFoundException;
 import com.example.product_service.business.mappers.ProductMapStructMapper;
 import com.example.product_service.business.repository.ProductRepository;
 import com.example.product_service.business.repository.model.ProductDAO;
@@ -50,7 +52,8 @@ public class ProductServiceTests {
     private ProductMapStructMapper mapper;
     @Mock
     private Validator validator;
-
+    private final Long existingProductId = 1L;
+    private final Long missingProductId = 999L;
     private List<Product> products;
     private List<ProductDAO> productDAOS;
     private Product product;
@@ -491,7 +494,44 @@ public class ProductServiceTests {
         assertThrows(ProductNotFoundException.class, () -> service.sellProductById(id));
     } */
 
+  /*  @Test
+    void sellProductById_success() {
+        Product product = new Product();
+        product.setId(existingProductId);
+        product.setQuantity(5);
 
+        when(service.findProductById(existingProductId)).thenReturn(Optional.of(product));
+
+        service.sellProductById(existingProductId);
+
+        assertEquals(4, product.getQuantity());
+        verify(service).updateProductQuantity(product);
+    }
+*/
+    @Test
+    void sellProductById_productNotFound() {
+        when(repository.findById(missingProductId)).thenReturn(Optional.empty());
+
+        ProductNotFoundException ex = assertThrows(ProductNotFoundException.class, () -> service.sellProductById(missingProductId));
+
+        assertTrue(ex.getMessage().contains(missingProductId.toString()));
+    }
+
+    @Test
+    void sellProductById_insufficientStock() {
+        ProductDAO productDAO = new ProductDAO();
+        productDAO.setId(existingProductId);
+
+        Product product = new Product();
+        product.setId(existingProductId);
+        product.setQuantity(0);
+
+        when(repository.findById(existingProductId)).thenReturn(Optional.of(productDAO));
+        when(mapper.productDAOToProduct(productDAO)).thenReturn(product);
+        InsufficientStockException ex = assertThrows(InsufficientStockException.class, () -> service.sellProductById(existingProductId));
+
+        assertEquals("Not enough quantity to sell", ex.getMessage());
+    }
     private List<ProductDAO> createProductDAOList() {
         List<ProductDAO> productDAOList = new ArrayList<>();
         productDAOList.add(productDAO);
