@@ -37,7 +37,7 @@ public class SalesController {
     })
     @PostMapping("/sell-product/{id}")
     public ResponseEntity<Object> sellProduct(@PathVariable Long id) {
-
+        System.out.println(2);
         try {
             salesService.sellProductById(id);
 

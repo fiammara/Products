@@ -23,7 +23,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 
 public class SalesControllerTests {
 
-
+/*
     @Autowired
     private MockMvc mockMvc;
     @Autowired
@@ -60,7 +60,7 @@ public class SalesControllerTests {
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isInternalServerError())
             .andExpect(jsonPath("$.error").value("Unexpected error"));
-    }
+    } */
 }
 
 

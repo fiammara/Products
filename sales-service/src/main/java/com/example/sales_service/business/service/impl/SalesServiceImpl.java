@@ -9,6 +9,8 @@ import com.example.sales_service.business.service.SalesService;
 import com.example.sales_service.model.Product;
 import jakarta.validation.Validator;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -18,7 +20,8 @@ import java.util.Optional;
 @Log4j2
 public class SalesServiceImpl implements SalesService {
 
-
+    @Autowired
+    private KafkaTemplate<String, String> kafkaTemplate;
     private final ProductRepository salesRepository;
     private final ProductMapStructMapper productMapper;
     private final Validator validator;
@@ -33,32 +36,21 @@ public class SalesServiceImpl implements SalesService {
     }
 
 
-    public void updateProductQuantity(Product product) {
+ /*   public void updateProductQuantity(Product product) {
         salesRepository.save(productMapper.productToDAO(product));
-    }
+    } */
 
 
     public void sellProductById(Long id) {
 
-        Product product = findProductById(id)
-            .orElseThrow(() -> new ProductNotFoundException(id));
-
-        if (product.getQuantity() <= 0) {
-            throw new InsufficientStockException(id);
+        try {
+            kafkaTemplate.send("product-events", id.toString());
+            System.out.println("✅ Kafka message sent for productId: " + id);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-
-        product.setQuantity(product.getQuantity() - 1);
-        updateProductQuantity(product);
     }
 
-    public Optional<Product> findProductById(Long id) {
 
-        Optional<Product> productOptional =
-            salesRepository.findById(id).flatMap(product -> Optional.ofNullable(productMapper.productDAOToProduct(product)));
-
-        log.info("Product with id {} is {}", id, productOptional);
-        return productOptional;
-
-    }
 
 }

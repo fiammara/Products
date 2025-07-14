@@ -10,12 +10,14 @@ import com.example.product_service.business.repository.ProductRepository;
 import com.example.product_service.business.repository.model.ProductDAO;
 import com.example.product_service.business.service.ProductService;
 import com.example.product_service.model.Product;
+import jakarta.transaction.Transactional;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
 import jakarta.validation.Validator;
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.stereotype.Service;
 
@@ -120,10 +122,11 @@ public class ProductServiceImpl implements ProductService {
         productRepository.deleteById(id);
         log.info("Product with id {} is deleted", id);
     }
-
+    @Transactional
     public void updateProductQuantity(Product product) {
         product.setQuantity(product.getQuantity() - 1);
         productRepository.save(productMapper.productToDAO(product));
+        productRepository.flush();
     }
 
 
@@ -172,14 +175,28 @@ public class ProductServiceImpl implements ProductService {
     }
 
     public void sellProductById(Long id) {
-        Product product = findProductById(id)
-            .orElseThrow(() -> new ProductNotFoundException(id));
+        int retries = 3;
+        while (retries > 0) {
+            try {
+                Product product = findProductById(id)
+                    .orElseThrow(() -> new ProductNotFoundException(id));
 
-        if (product.getQuantity() <= 0) {
-            throw new InsufficientStockException(id);
+                if (product.getQuantity() <= 0) {
+                    throw new InsufficientStockException(id);
+                }
+
+                product.setQuantity(product.getQuantity() - 1);
+                updateProductQuantity(product);
+
+                System.out.println("✅ Product sold: " + id);
+                break; // success, exit loop
+
+            } catch (OptimisticLockingFailureException e) {
+                retries--;
+                System.out.println("❌ Concurrency conflict detected for product ID: " + id + ", retries left: " + retries);
+                if (retries == 0) throw e; // rethrow after max retries
+                // Optionally add small delay here before retrying
+            }
         }
-
-        product.setQuantity(product.getQuantity() - 1);
-        updateProductQuantity(product);
     }
 }

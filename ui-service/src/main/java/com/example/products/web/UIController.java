@@ -16,7 +16,6 @@ import org.springframework.web.reactive.function.client.WebClientRequestExceptio
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 
-
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -59,7 +58,6 @@ public class UIController {
                 return "productList";
             });
     }
-
 
 
     @GetMapping("/sort-product")
@@ -175,8 +173,7 @@ public class UIController {
     }
 
     @GetMapping("/sell-product/{id}")
-    public String sellProduct(@PathVariable Long id) {
-
+    public String sellProduct(@PathVariable Long id, Model model) {
         try {
 
             salesClient.post()

@@ -93,6 +93,14 @@
 			<artifactId>swagger-annotations</artifactId>
 			<version>1.6.16</version>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.kafka</groupId>
+			<artifactId>spring-kafka</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.kafka</groupId>
+			<artifactId>kafka-streams</artifactId>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -132,9 +140,15 @@
 				<artifactId>flyway-maven-plugin</artifactId>
 				<version>${flyway.version}</version>
 				<configuration>
-					<configFiles>
-						<configFile>flyway.conf</configFile>
-					</configFiles>
+
+					<url>jdbc:mysql://mysql:3306/products</url>
+					<user>root</user>
+					<password>rootpassword</password>
+
+					<locations>
+						<location>filesystem:src/main/resources/db/migration</location>
+					</locations>
+					<baselineOnMigrate>true</baselineOnMigrate>
 				</configuration>
 			</plugin>
 		</plugins>

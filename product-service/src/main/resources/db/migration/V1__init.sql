@@ -8,5 +8,6 @@ CREATE TABLE product (
     quantity INT NOT NULL,
     initial_quantity INT,
     price DOUBLE NOT NULL,
-    category VARCHAR(255)
+    category VARCHAR(255),
+    version BIGINT NOT NULL DEFAULT 0
 );

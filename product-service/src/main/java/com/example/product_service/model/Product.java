@@ -3,6 +3,7 @@ package com.example.product_service.model;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.Version;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -38,4 +39,5 @@ public class Product {
     @Enumerated(EnumType.STRING)
     private Category category;
 
+    private Integer version;
 }

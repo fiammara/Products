@@ -9,9 +9,9 @@ import java.util.Optional;
 public interface SalesService {
 
 
-    Optional<Product> findProductById(Long id) throws Exception;
+  //  Optional<Product> findProductById(Long id) throws Exception;
 
-    void updateProductQuantity(Product product);
+  //  void updateProductQuantity(Product product);
 
 
 
