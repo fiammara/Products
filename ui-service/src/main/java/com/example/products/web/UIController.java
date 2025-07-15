@@ -41,7 +41,7 @@ public class UIController {
         this.salesClient = salesClient;
     }
 
-    @GetMapping("/")
+  /*  @GetMapping("/")
     public Mono<String> displayProductList(Model model) {
         return productClient.get()
             .uri(productServiceUrl)
@@ -57,8 +57,26 @@ public class UIController {
                 model.addAttribute("productList", products);
                 return "productList";
             });
-    }
+    } */
+  @GetMapping("/")
+  public String displayProductList(Model model) {
+      List<Product> products;
 
+      try {
+          products = productClient.get()
+              .uri(productServiceUrl)
+              .retrieve()
+              .bodyToFlux(Product.class)
+              .collectList()
+              .block(); // Blocks and waits for the result
+      } catch (Exception e) {
+          System.err.println("Error fetching products: " + e.getMessage());
+          products = Collections.emptyList();
+      }
+
+      model.addAttribute("productList", products);
+      return "productList";
+  }
 
     @GetMapping("/sort-product")
     public String displayProductListSortedByName(@RequestParam(required = false) String message,

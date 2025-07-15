@@ -29,6 +29,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -64,15 +65,19 @@ public class ProductControllerTest {
 
     @Test
     void shouldReturnProductWhenIdExists() throws Exception {
-        Product mockProduct = createProduct();
-        when(service.findProductById(1L)).thenReturn(Optional.of(mockProduct));
+        Product createdProduct = new Product();
+        createdProduct.setId(1L);
+        createdProduct.setName("MN");
+        createdProduct.setDescription("Modern");
+        createdProduct.setPrice(250);
+        when(service.findProductById(1L)).thenReturn(Optional.of(createdProduct));
 
         mockMvc.perform(get("/api/products/1")
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.id").value(mockProduct.getId()))
-            .andExpect(jsonPath("$.name").value(mockProduct.getName()))
-            .andExpect(jsonPath("$.price").value(mockProduct.getPrice()));
+            .andExpect(jsonPath("$.id").value(createdProduct.getId()))
+            .andExpect(jsonPath("$.name").value(createdProduct.getName()))
+            .andExpect(jsonPath("$.price").value(createdProduct.getPrice()));
     }
 
     @Test
@@ -88,12 +93,14 @@ public class ProductControllerTest {
     @Test
     void shouldCreateProductSuccessfully() throws Exception {
         Product productToCreate = new Product();
-        productToCreate.setName("Banana");
+        productToCreate.setName("Banana0");
+        productToCreate.setDescription("B1");
         productToCreate.setPrice(2.50);
 
         Product createdProduct = new Product();
         createdProduct.setId(1L);
-        createdProduct.setName("Banana");
+        createdProduct.setName("Banana2");
+        productToCreate.setDescription("B3");
         createdProduct.setPrice(2.50);
 
         when(service.createProduct(any(Product.class))).thenReturn(createdProduct);
@@ -101,7 +108,7 @@ public class ProductControllerTest {
         mockMvc.perform(post("/api/products/add-product")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(new ObjectMapper().writeValueAsString(productToCreate)))
-            .andExpect(status().isOk())
+            .andExpect(status().isCreated())
             .andExpect(jsonPath("$.id").value(createdProduct.getId()))
             .andExpect(jsonPath("$.name").value(createdProduct.getName()))
             .andExpect(jsonPath("$.price").value(createdProduct.getPrice()));
@@ -139,21 +146,41 @@ public class ProductControllerTest {
 
     }
 
+    @Test
+    void updateProduct_shouldReturnBadRequest_whenInvalid() throws Exception {
+
+        Product createdProduct = new Product();
+        createdProduct.setId(1L);
+        createdProduct.setName("MN");
+        createdProduct.setDescription("");
+        createdProduct.setPrice(250);
+        String invalidJson = objectMapper.writeValueAsString(createdProduct);
+
+        mockMvc.perform(put("/api/products/products/2")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(invalidJson))
+            .andDo(print())
+            .andExpect(status().isBadRequest());
+    }
+
     private List<Product> createProductList() {
         List<Product> productList = new ArrayList<>();
-        Product product1 = createProduct();
-        Product product2 = createProduct();
-        productList.add(product1);
-        productList.add(product2);
+
+        Product createdProduct1 = new Product();
+        createdProduct1.setId(1L);
+        createdProduct1.setName("MN");
+        createdProduct1.setDescription("Modern");
+        createdProduct1.setPrice(250);
+
+        Product createdProduct2 = new Product();
+        createdProduct2.setId(2L);
+        createdProduct2.setName("MN2");
+        createdProduct2.setDescription("Modern2");
+        createdProduct2.setPrice(450);
+        productList.add(createdProduct1);
+        productList.add(createdProduct2);
         return productList;
     }
 
-    private Product createProduct() {
-        Product product = new Product();
-        product.setId(1L);
-        product.setName("Nike");
-
-        return product;
-    }
 
 }

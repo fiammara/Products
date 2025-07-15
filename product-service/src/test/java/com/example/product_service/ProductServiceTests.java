@@ -9,8 +9,6 @@ import com.example.product_service.business.repository.model.ProductDAO;
 import com.example.product_service.business.service.impl.ProductServiceImpl;
 import com.example.product_service.model.Category;
 import com.example.product_service.model.Product;
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,13 +17,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.crossstore.ChangeSetPersister;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -33,10 +29,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.verification.VerificationModeFactory.times;
 
@@ -263,7 +257,6 @@ public class ProductServiceTests {
         ProductDAO savedDAO = new ProductDAO();
         Product mappedProduct = new Product();
 
-        when(validator.validate(inputProduct)).thenReturn(Collections.emptySet());
         when(mapper.productToDAO(inputProduct)).thenReturn(daoToSave);
         when(repository.save(daoToSave)).thenReturn(savedDAO);
         when(mapper.productDAOToProduct(savedDAO)).thenReturn(mappedProduct);
@@ -274,32 +267,11 @@ public class ProductServiceTests {
 
         assertEquals(mappedProduct, result);
         assertEquals(inputProduct.getInitialQuantity(), inputProduct.getQuantity());
-        verify(validator).validate(inputProduct);
+
         verify(repository).save(daoToSave);
         verify(mapper).productDAOToProduct(savedDAO);
     }
 
-    @Test
-    void createProduct_withInvalidProduct_shouldThrowValidationException() {
-
-        Product invalidProduct = new Product();
-
-        ConstraintViolation<Product> violation = mock(ConstraintViolation.class);
-        Set<ConstraintViolation<Product>> violations = Set.of(violation);
-
-        when(validator.validate(invalidProduct)).thenReturn(violations);
-
-        ConstraintViolationException exception = assertThrows(
-            ConstraintViolationException.class,
-            () -> service.createProduct(invalidProduct)
-        );
-
-        assertEquals("Product info validation failed", exception.getMessage());
-        assertEquals(violations, exception.getConstraintViolations());
-
-        verify(validator).validate(invalidProduct);
-        verifyNoMoreInteractions(repository, mapper);
-    }
 
     @Test
     void deleteProduct_shouldCallRepositoryWithCorrectId() {
@@ -400,7 +372,6 @@ public class ProductServiceTests {
         ProductDAO daoSaved = new ProductDAO();
         Product mappedUpdated = new Product();
 
-        when(validator.validate(input)).thenReturn(Collections.emptySet());
         doReturn(Optional.of(existing)).when(service).findProductById(1L);
         when(mapper.productToDAO(existing)).thenReturn(daoToSave);
         when(repository.save(daoToSave)).thenReturn(daoSaved);
@@ -418,43 +389,9 @@ public class ProductServiceTests {
         verify(mapper).productDAOToProduct(daoSaved);
     }
 
-    @Test
-    void updateProduct_shouldThrowValidationException_whenInvalid() {
-
-        Product invalidProduct = new Product();
-
-        ConstraintViolation<Product> violation = mock(ConstraintViolation.class);
-        Set<ConstraintViolation<Product>> violations = Set.of(violation);
-
-        when(validator.validate(invalidProduct)).thenReturn(violations);
 
 
-        ConstraintViolationException exception = assertThrows(
-            ConstraintViolationException.class,
-            () -> service.updateProduct(invalidProduct)
-        );
 
-        assertEquals("Validation failed", exception.getMessage());
-        verify(validator).validate(invalidProduct);
-        verifyNoMoreInteractions(repository);
-    }
-
-    @Test
-    void updateProduct_shouldThrowNotFoundException_whenProductNotExists() throws Exception {
-
-        Product input = createProduct();
-        input.setId(999L);
-
-        when(validator.validate(input)).thenReturn(Collections.emptySet());
-        doReturn(Optional.empty()).when(service).findProductById(999L);
-        assertThrows(
-            ChangeSetPersister.NotFoundException.class,
-            () -> service.updateProduct(input)
-        );
-
-        verify(validator).validate(input);
-        verify(service).findProductById(999L);
-    }
   /*  @Test
     void sellProductById_shouldDecreaseQuantity_whenQuantityGreaterThanZero() throws Exception {
 
@@ -532,6 +469,7 @@ public class ProductServiceTests {
 
         assertEquals("Not enough quantity to sell", ex.getMessage());
     }
+
     private List<ProductDAO> createProductDAOList() {
         List<ProductDAO> productDAOList = new ArrayList<>();
         productDAOList.add(productDAO);

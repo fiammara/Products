@@ -11,20 +11,14 @@ import com.example.product_service.business.repository.model.ProductDAO;
 import com.example.product_service.business.service.ProductService;
 import com.example.product_service.model.Product;
 import jakarta.transaction.Transactional;
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
-import jakarta.validation.Validator;
-import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.dao.OptimisticLockingFailureException;
-import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,27 +27,28 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
     private final ProductMapStructMapper productMapper;
-    private final Validator validator;
 
 
     public ProductServiceImpl(ProductRepository productRepository,
-                              ProductMapStructMapper productMapper, Validator validator) {
+                              ProductMapStructMapper productMapper) {
         this.productRepository = productRepository;
         this.productMapper = productMapper;
-        this.validator = validator;
+
     }
 
-
+    @Override
     public List<Product> getAllProducts() {
 
         List<ProductDAO> productDAOList = productRepository.findAll();
-        log.info("Got product list. Size is: {}", productDAOList::size);
+        log.info("Got product list. Size is: {}", productDAOList.size());
         return productDAOList.stream()
             .map(productMapper::productDAOToProduct)
             .collect(Collectors.toList());
     }
 
+    @Override
     public List<Product> getProductsSortedByName() {
+
         List<ProductDAO> productDAOList = productRepository.findAll();
         return productDAOList.stream()
             .map(productMapper::productDAOToProduct)
@@ -62,7 +57,9 @@ public class ProductServiceImpl implements ProductService {
 
     }
 
+    @Override
     public List<Product> getProductsSortedByPrice() {
+
         List<ProductDAO> productDAOList = productRepository.findAll();
         return productDAOList.stream()
             .map(productMapper::productDAOToProduct)
@@ -71,8 +68,8 @@ public class ProductServiceImpl implements ProductService {
 
     }
 
+    @Override
     public List<Product> getProductsSortedByDescription() {
-
 
         List<ProductDAO> listByDescription = productRepository.findAll();
         return listByDescription.stream()
@@ -81,24 +78,22 @@ public class ProductServiceImpl implements ProductService {
             .collect(Collectors.toList());
     }
 
+    @Override
     public List<Product> getProductsSortedByCategory() {
-        List<ProductDAO> listByCategory = productRepository.findAll();
 
-        return listByCategory.stream()
+        List<ProductDAO> listByCategory = productRepository.findAll();
+        log.info("Fetched {} products from repository for sorting by category", listByCategory.size());
+
+        List<Product> sortedProducts = listByCategory.stream()
             .map(productMapper::productDAOToProduct)
             .sorted(new ProductComparatorByCategory())
             .collect(Collectors.toList());
+        log.info("Returning {} products sorted by category", sortedProducts.size());
+        return sortedProducts;
     }
 
+    @Override
     public Product createProduct(@Valid Product product) {
-
-
-        Set<ConstraintViolation<Product>> violations = validator.validate(product);
-
-        if (!violations.isEmpty()) {
-
-            throw new ConstraintViolationException("Product info validation failed", violations);
-        }
 
         ProductDAO productDAOSaved = productRepository.save(productMapper.productToDAO(product));
         product.setQuantity(product.getInitialQuantity());
@@ -107,7 +102,7 @@ public class ProductServiceImpl implements ProductService {
 
     }
 
-
+    @Override
     public Optional<Product> findProductById(Long id) {
 
         Optional<Product> productOptional =
@@ -118,83 +113,84 @@ public class ProductServiceImpl implements ProductService {
 
     }
 
+    @Override
     public void deleteProduct(Long id) {
+
         productRepository.deleteById(id);
         log.info("Product with id {} is deleted", id);
     }
+
+    @Override
     @Transactional
     public void updateProductQuantity(Product product) {
+
         product.setQuantity(product.getQuantity() - 1);
         productRepository.saveAndFlush(productMapper.productToDAO(product));
+        log.info("Updated product quantity for product id {}:  -> {}", product.getId(), product.getQuantity());
     }
 
+    @Override
+    public Product updateProduct(Product productToUpdate) {
+        Product existing = findProductById(productToUpdate.getId())
+            .orElseThrow(() -> new ProductNotFoundException("Product not found with id: " + productToUpdate.getId()));
 
-    @SneakyThrows
-
-    public Product updateProduct(@Valid Product productToUpdate) {
-
-        Set<ConstraintViolation<Product>> violations = validator.validate(productToUpdate);
-        if (!violations.isEmpty()) {
-            throw new ConstraintViolationException("Validation failed", violations);
-        }
-        if (!findProductById(productToUpdate.getId()).isPresent()) {
-            throw new ChangeSetPersister.NotFoundException();
-        }
-        Product existing = findProductById(productToUpdate.getId()).get();
         existing.setName(productToUpdate.getName());
         existing.setDescription(productToUpdate.getDescription());
         existing.setPrice(productToUpdate.getPrice());
         existing.setQuantity(productToUpdate.getQuantity());
         existing.setCategory(productToUpdate.getCategory());
-        ProductDAO productSaved =
-            productRepository.save(productMapper.productToDAO(existing));
-        log.info("Product updated: {}", () -> productSaved);
-        return productMapper.productDAOToProduct(productSaved);
+
+        ProductDAO saved = productRepository.save(productMapper.productToDAO(existing));
+        log.info("Product updated: {}", saved);
+
+        return productMapper.productDAOToProduct(saved);
 
     }
 
+    @Override
     public Optional<Product> findProductByName(String name) {
 
-        Optional<Product> productOptional = productRepository.findByName(name)
-            .stream()
+        Optional<Product> productOptional = productRepository.findByName(name).stream()
             .findFirst()
-            .flatMap(productDAO -> Optional.ofNullable(productMapper.productDAOToProduct(productDAO)));
+            .map(productMapper::productDAOToProduct);
 
-        log.info("Found product with name {} is {}", name, productOptional);
+        log.info("Found product with name '{}': {}", name, productOptional.orElse(null));
         return productOptional;
 
     }
 
+    @Override
     public List<Product> findProductsByKeyword(String keyword) {
 
         List<ProductDAO> productDAOList = productRepository.findByKeyword(keyword);
-
-        log.info("Got product list by keyword. Size is: {}", productDAOList::size);
-        return productDAOList.stream().map(productMapper::productDAOToProduct).collect(Collectors.toList());
+        log.info("Got product list by keyword '{}'. Size is: {}", keyword, productDAOList.size());
+        return productDAOList.stream()
+            .map(productMapper::productDAOToProduct)
+            .collect(Collectors.toList());
     }
 
+    @Override
     public void sellProductById(Long id) {
+
         int retries = 3;
         while (retries > 0) {
             try {
                 Product product = findProductById(id)
-                    .orElseThrow(() -> new ProductNotFoundException(id));
+                    .orElseThrow(() -> new ProductNotFoundException(id.toString()));
 
                 if (product.getQuantity() <= 0) {
                     throw new InsufficientStockException(id);
                 }
 
-              //  product.setQuantity(product.getQuantity() - 1);
                 updateProductQuantity(product);
-
-                System.out.println("✅ Product sold: " + id);
-                break; // success, exit loop
+                log.info("Product sold: {}", id);
+                break;
 
             } catch (OptimisticLockingFailureException e) {
                 retries--;
-                System.out.println("❌ Concurrency conflict detected for product ID: " + id + ", retries left: " + retries);
-                if (retries == 0) throw e; // rethrow after max retries
-                // Optionally add small delay here before retrying
+                log.warn("Concurrency conflict detected for product ID: {}, retries left: {}", id, retries);
+                if (retries == 0) throw e;
+
             }
         }
     }
