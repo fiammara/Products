@@ -1,4 +1,4 @@
-package com.example.product_service;
+package com.example.product_service.kafka;
 
 import com.example.product_service.business.repository.ProductRepository;
 import com.example.product_service.business.service.ProductService;

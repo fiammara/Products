@@ -1,4 +1,4 @@
-package com.example.sales_service;
+package com.example.sales_service.web;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,7 +9,7 @@ public class WebClientConfig {
 
     @Bean
     public WebClient webClient(WebClient.Builder builder) {
-        // You can configure base URL here if all calls are to the same service
+
         return builder.build();
     }
 }

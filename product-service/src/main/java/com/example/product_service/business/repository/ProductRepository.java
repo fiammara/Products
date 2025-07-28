@@ -13,10 +13,8 @@ import java.util.List;
 @Repository
 public interface ProductRepository extends JpaRepository<ProductDAO, Long> {
 
-
     List<ProductDAO> findByName(String name);
-
-    @Query("SELECT p FROM ProductDAO p WHERE str(p.name) LIKE :keyword OR str(p.category) LIKE :keyword")
+    @Query(value = "select * from product p where p.name like %:keyword% or p.category like %:keyword%", nativeQuery = true)
     List<ProductDAO> findByKeyword(@Param("keyword") String keyword);
 
 }

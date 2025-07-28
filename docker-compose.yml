@@ -1,10 +1,10 @@
-version: '3'
 
 services:
   mysql:
     image: mysql:8.0
     container_name: my-mysql
     environment:
+      SPRING_PROFILES_ACTIVE: prod
       MYSQL_ROOT_PASSWORD: rootpassword
       MYSQL_DATABASE: products
     ports:
@@ -24,15 +24,39 @@ services:
     ports:
       - "8081:8081"
     environment:
+      SPRING_PROFILES_ACTIVE: prod
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/products?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: rootpassword
-      SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
+      SPRING_FLYWAY_ENABLED: "false"
     depends_on:
       mysql:
         condition: service_healthy
+      flyway:
+        condition: service_completed_successfully
       kafka:
         condition: service_started
+    restart: on-failure
+    networks:
+      - microservices-net
+
+  user-service:
+    build: ./user-service
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/products?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: rootpassword
+
+      SPRING_FLYWAY_ENABLED: "false"
+
+    depends_on:
+      mysql:
+        condition: service_healthy
+      flyway:
+        condition: service_completed_successfully
     restart: on-failure
     networks:
       - microservices-net
@@ -42,6 +66,7 @@ services:
     ports:
       - "8082:8082"
     environment:
+      SPRING_PROFILES_ACTIVE: prod
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/products?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: rootpassword
@@ -55,18 +80,22 @@ services:
       - microservices-net
 
   flyway:
-    image: flyway/flyway:9.22.1
+    image: flyway/flyway:11.10.4
     depends_on:
       - mysql
     volumes:
-      - ./src/main/resources/db/migration:/flyway/sql
-    command: -url=jdbc:mysql://mysql:3306/mydb -user=user -password=userpassword migrate
+      - ./db-migrations:/flyway/sql
+      - ./flyway-docker.conf:/flyway/conf/flyway.conf
+    networks:
+      - microservices-net
+    command: -connectRetries=10 migrate
 
   ui-service:
     build: ./ui-service
     ports:
-      - "8080:8080"
+      - "8080:9191"
     environment:
+      SPRING_PROFILES_ACTIVE: prod
       PRODUCT_SERVICE_URL: http://product-service:8081/api/products
       SALES_SERVICE_URL: http://sales-service:8082/api/sales
     depends_on:

@@ -77,7 +77,7 @@ public class ProductController {
         @ApiResponse(code = 404, message = HTMLResponseMessages.HTTP_404),
         @ApiResponse(code = 500, message = HTMLResponseMessages.HTTP_500)
     })
-    @GetMapping("/{id}")
+    @GetMapping("/find/{id}")
     public ResponseEntity<Product> getProductById(
         @ApiParam(value = "ID of the product to retrieve", required = true)
         @PathVariable Long id) throws Exception {
@@ -183,7 +183,6 @@ public class ProductController {
             log.info("No products found for sorting by price");
             return ResponseEntity.noContent().build();
         }
-
         return ResponseEntity.ok(products);
     }
 
@@ -239,6 +238,7 @@ public class ProductController {
         @NotNull @PathVariable Long id,
         @ApiParam(value = "Updated product object", required = true)
         @Valid @RequestBody Product product) {
+
         log.info("Update product request received for id: {}", id);
         if (!id.equals(product.getId())) {
             log.warn("Product for update with id {} is not matching", id);

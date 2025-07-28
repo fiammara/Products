@@ -103,6 +103,32 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-api</artifactId>
+			<version>0.11.5</version>
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-impl</artifactId>
+			<version>0.11.5</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+		<groupId>io.jsonwebtoken</groupId>
+		<artifactId>jjwt-jackson</artifactId>
+		<version>0.11.5</version>
+		<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-test</artifactId>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -140,17 +166,13 @@
 			<plugin>
 				<groupId>org.flywaydb</groupId>
 				<artifactId>flyway-maven-plugin</artifactId>
-				<version>${flyway.version}</version>
+				<version>11.10.2</version>
 				<configuration>
-
-					<url>jdbc:mysql://mysql:3306/products</url>
-					<user>root</user>
-					<password>rootpassword</password>
-
-					<locations>
-						<location>filesystem:src/main/resources/db/migration</location>
-					</locations>
-					<baselineOnMigrate>true</baselineOnMigrate>
+					<configFiles>
+						<configFile>
+							src/main/resources/flyway.conf
+						</configFile>
+					</configFiles>
 				</configuration>
 			</plugin>
 		</plugins>

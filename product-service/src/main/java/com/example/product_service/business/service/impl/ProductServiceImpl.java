@@ -95,8 +95,8 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Product createProduct(@Valid Product product) {
 
-        ProductDAO productDAOSaved = productRepository.save(productMapper.productToDAO(product));
         product.setQuantity(product.getInitialQuantity());
+        ProductDAO productDAOSaved = productRepository.save(productMapper.productToDAO(product));
         log.info("Repository saved product DAO: {}", productDAOSaved);
         return productMapper.productDAOToProduct(productDAOSaved);
 
@@ -120,16 +120,23 @@ public class ProductServiceImpl implements ProductService {
         log.info("Product with id {} is deleted", id);
     }
 
-    @Override
     @Transactional
     public void updateProductQuantity(Product product) {
+        ProductDAO dao = productRepository.findById(product.getId())
+            .orElseThrow(() -> new ProductNotFoundException("Product not found: " + product.getId()));
 
-        product.setQuantity(product.getQuantity() - 1);
-        productRepository.saveAndFlush(productMapper.productToDAO(product));
-        log.info("Updated product quantity for product id {}:  -> {}", product.getId(), product.getQuantity());
+        if (dao.getQuantity() <= 0) {
+            throw new InsufficientStockException(product.getId());
+        }
+
+        dao.setQuantity(dao.getQuantity() - 1);
+        productRepository.saveAndFlush(dao);
+
+        log.info("Updated product quantity for product id {}:  -> {}", dao.getId(), dao.getQuantity());
     }
 
     @Override
+    @Transactional
     public Product updateProduct(Product productToUpdate) {
         Product existing = findProductById(productToUpdate.getId())
             .orElseThrow(() -> new ProductNotFoundException("Product not found with id: " + productToUpdate.getId()));
@@ -140,7 +147,7 @@ public class ProductServiceImpl implements ProductService {
         existing.setQuantity(productToUpdate.getQuantity());
         existing.setCategory(productToUpdate.getCategory());
 
-        ProductDAO saved = productRepository.save(productMapper.productToDAO(existing));
+        ProductDAO saved = productRepository.saveAndFlush(productMapper.productToDAO(existing));
         log.info("Product updated: {}", saved);
 
         return productMapper.productDAOToProduct(saved);
@@ -194,4 +201,5 @@ public class ProductServiceImpl implements ProductService {
             }
         }
     }
+
 }

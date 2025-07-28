@@ -1,77 +1,91 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <title>Product Management RRB</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
-          integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" ></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.min.js" integrity="sha384-Atwg2Pkwv9vp0ygtn1JAojH0nYbwNJLPhwyoVbhoPwBhjQPR5VtM2+xf0Uwh9KtT" crossorigin="anonymous"></script>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+    <!-- Google Font Poppins -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
+
+    <style>
+        .card {
+            font-family: 'Poppins', sans-serif;
+        }
+        .category-rect {
+            height: 60px;
+            border-radius: 0.375rem;
+            box-shadow: 0 0.125rem 0.25rem rgb(0 0 0 / 0.075);
+
+        }
+    </style>
 </head>
 <body>
 <header th:replace="~{fragments/header.html :: shared_header}"></header>
 
 <main>
-    <div class="container">
-        <h3>List of products</h3>
+    <div class="container my-4">
+        <h3 class="mb-4">Available products</h3>
 
-        <div class="row">
-            <form th:action="@{/search}" method="get">
-                <input type="text" name="keyword" th:value="${keyword}" placeholder="Search for product">
+        <!-- Search Form -->
+        <div class="row mb-4">
+            <form th:action="@{/search}" method="get" class="d-flex align-items-center gap-2">
+                <input type="text" name="keyword" th:value="${keyword}" class="form-control" placeholder="Search for product" style="width: 250px;" />
                 <button class="btn btn-outline-secondary" type="submit">Search</button>
-                <button class="btn btn-outline-secondary" type="submit">Reset</button>
+                <button class="btn btn-outline-secondary" type="submit" name="reset" value="true">Reset</button>
             </form>
         </div>
 
-        <div class="row">
-
-
-            <div th:each="product: ${productList}" class="col-md-2 d-flex">
-                <div class="card">
-                    <div>
-
-                        <img th:src="${product.category != null and product.category.name() == 'SHOES' ? 'url_for_shoes' :
-              (product.category != null and product.category.name() == 'CLOTHES' ? 'url_for_clothes' : 'default_url')}"
-                             class="card-img-top" alt="..."/>
-
-                        <!--
-                        <img th:src="${(product.getCategory().toString()=='SHOES') ? 'https://thumbs.dreamstime.com/z/percent-off-golden-realistic-text-light-background-percent-off-golden-realistic-text-light-background-228871420.jpg?w=768' : 'https://media.istockphoto.com/id/1600489364/vector/up-to-10-percent-off-sale-discount-offer-price-sign-vector.jpg?s=612x612&w=0&k=20&c=lNaEE987b_WUj0AmS4flNufFt6ihNXsNDl0Ak0PBpAA='}" class="card-img-top" alt="..."/>
-                     <img th:src="${(product.getCategory().toString()=='SHOES') ? 'https://media.istockphoto.com/id/1419178365/vector/black-friday-give-big-discount-sale-for-all-products-with-gift-box-or-marketing-price-tag-in.jpg?s=612x612&w=0&k=20&c=-9sRd4YZGOHfWvFvt_DLGhn-11SZUz4LbWkyrgTfV14=' : 'https://media.istockphoto.com/id/1426989676/vector/10-off-discount-10-percent-red-banner-with-yellow-floating-balloon-for-promotions-and-offers.webp?s=1024x1024&w=is&k=20&c=KCJ3Gl92S1QXbQ-_pbRAHHYh5zEUzVIwSo79X2Fyhn8='}" class="card-img-top" alt="..."/>
-
-                       -->
+        <!-- Products Grid -->
+        <div class="row g-3">
+            <div th:each="product : ${productList}" class="col-sm-6 col-md-4 col-lg-3 d-flex">
+                <div class="card flex-fill">
+                    <div th:style="
+                          ${product.category != null and product.category.name() == 'SHOES'} ? 'background-color: #e3e8e6;' :
+                          (${product.category != null and product.category.name() == 'CLOTHES'} ? 'background-color: #e3e8e6;' : 'background-color: #e3e8e6;')"
+                         class="category-rect">
                     </div>
 
-                    <div class="card-body row ">
-                        <h5 class="card-title" th:text="${product.name}"></h5>
-                        <p class="padding-0">Description: <span th:text="${product.description}"></span></p>
-                        <p class="padding-0">Category: <span th:text="${product.category}"></span></p>
-                        <p class="padding-0">Price: <span th:text="${product.price}"></span> Eur</p>
-                        <p class="padding-0">Left in store: <span th:text="${product.quantity}"></span></p>
-                        <p class="padding-0">Sold: <span
-                                th:text="${product.initialQuantity - product.quantity}"></span></p>
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title" th:text="${product.name}">Product Name</h5>
+                        <p class="card-text mb-1"><strong>Description:</strong> <span th:text="${product.description}"></span></p>
+                        <p class="card-text mb-1"><strong>Category:</strong> <span th:text="${product.category}"></span></p>
+                        <p class="card-text mb-1"><strong>Price:</strong> <span th:text="${product.price}"></span> Eur</p>
+                        <p class="card-text mb-1"><strong>Left in store:</strong> <span th:text="${product.quantity}"></span></p>
+                        <p class="card-text mb-3"><strong>Sold:</strong> <span th:text="${product.initialQuantity - product.quantity}"></span></p>
 
-                        <form>
-                            <a th:href="${'/delete/' + product.getId()}" class="btn btn-danger"
-                               role="button">&#10008;</a>
-                            <a th:href="${'/edit/' + product.getId()}" class="btn btn-primary" role="button">&#9998;</a>
-                            <a th:href="${'/sell-product/' + product.getId()}" th:if="${product.getQuantity() != 0}"
-                               class="btn btn-success" role="button">Sell</a>
+                        <div class="mt-auto d-flex gap-2">
 
+                            <form th:if="${username != null}"
+                                  th:action="@{/delete/{id}(id=${product.id})}"
+                                  method="post"
+                                  onsubmit="return confirm('Are you sure you want to delete?');"
+                                  style="display:inline;">
+                                <button class="btn btn-danger" type="submit" title="Delete">&#10008;</button>
+                            </form>
 
-                        </form>
+                            <a th:if="${username != null}"
+                               th:href="@{/edit/{id}(id=${product.id})}"
+                               class="btn btn-primary"
+                               role="button"
+                               title="Edit">&#9998;</a>
+                            <form th:action="@{/sell-product/{id}(id=${product.id})}" method="post" th:if="${product.getQuantity() != 0}" style="display:inline;">
+                                <button class="btn btn-success" type="submit">Buy</button>
+                            </form>
 
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-
-
     </div>
-
 </main>
 
-<footer th:replace="~{fragments/footer.html :: footer}"></footer>
-
+<!-- Bootstrap JS Bundle (Popper included) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+
+

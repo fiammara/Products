@@ -9,13 +9,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,10 +35,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-
+@AutoConfigureMockMvc(addFilters = false)
 @WebMvcTest(ProductController.class)
 @ExtendWith(MockitoExtension.class)
-
 public class ProductControllerTest {
 
     public static String URL = "/api/products";
@@ -72,7 +72,7 @@ public class ProductControllerTest {
         createdProduct.setPrice(250);
         when(service.findProductById(1L)).thenReturn(Optional.of(createdProduct));
 
-        mockMvc.perform(get("/api/products/1")
+        mockMvc.perform(get("/api/products/find/1")
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.id").value(createdProduct.getId()))
@@ -84,7 +84,7 @@ public class ProductControllerTest {
     void shouldReturn404WhenProductNotFound() throws Exception {
         when(service.findProductById(999L)).thenReturn(Optional.empty());
 
-        mockMvc.perform(get("/api/products/999")
+        mockMvc.perform(get("/api/products/find/999")
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound());
     }
@@ -124,7 +124,7 @@ public class ProductControllerTest {
     }
 
     @Test
-    public void testUpdateProduct() throws Exception {
+    void testUpdateProduct() throws Exception {
         Product createdProduct = new Product();
         createdProduct.setId(1L);
         createdProduct.setName("MN");
@@ -159,10 +159,39 @@ public class ProductControllerTest {
         mockMvc.perform(put("/api/products/products/2")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(invalidJson))
-            .andDo(print())
+
             .andExpect(status().isBadRequest());
     }
+    @Test
+    void shouldReturnNoContentWhenNoProducts() throws Exception {
+        when(service.getAllProducts()).thenReturn(Collections.emptyList());
 
+        mockMvc.perform(get(URL)
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void shouldReturnProductsForSearchKeyword() throws Exception {
+        List<Product> productList = createProductList();
+        when(service.findProductsByKeyword("MN")).thenReturn(productList);
+
+        mockMvc.perform(get(URL + "/search")
+                .param("keyword", "MN")
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(productList.size()));
+    }
+
+    @Test
+    void shouldReturnNoContentForSearchNoResults() throws Exception {
+        when(service.findProductsByKeyword("nothing")).thenReturn(Collections.emptyList());
+
+        mockMvc.perform(get(URL + "/search")
+                .param("keyword", "nothing")
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isNoContent());
+    }
     private List<Product> createProductList() {
         List<Product> productList = new ArrayList<>();
 

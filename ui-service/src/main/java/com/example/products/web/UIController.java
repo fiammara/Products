@@ -2,8 +2,11 @@ package com.example.products.web;
 
 
 import com.example.products.model.Product;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientRequestException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
-import reactor.core.publisher.Mono;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -24,12 +26,11 @@ import java.util.List;
 
 @Controller
 public class UIController {
-
-    @Value("${PRODUCT_SERVICE_URL}")
+    @Value("${product.service.url}")
     private String productServiceUrl;
     private final WebClient productClient;
 
-    @Value("${SALES_SERVICE_URL}")
+    @Value("${sales.service.url}")
     private String salesServiceUrl;
     private final WebClient salesClient;
 
@@ -41,48 +42,44 @@ public class UIController {
         this.salesClient = salesClient;
     }
 
-  /*  @GetMapping("/")
-    public Mono<String> displayProductList(Model model) {
-        return productClient.get()
-            .uri(productServiceUrl)
-            .retrieve()
-            .bodyToFlux(Product.class)
-            .collectList()
-            .doOnError(e -> {
 
-                System.err.println("Error fetching products: " + e.getMessage());
-            })
-            .onErrorReturn(Collections.emptyList())
-            .map(products -> {
-                model.addAttribute("productList", products);
-                return "productList";
-            });
-    } */
-  @GetMapping("/")
-  public String displayProductList(Model model) {
-      List<Product> products;
+    @GetMapping("/")
+    public String displayProductList(Model model, HttpServletResponse response, HttpSession session) {
 
-      try {
-          products = productClient.get()
-              .uri(productServiceUrl)
-              .retrieve()
-              .bodyToFlux(Product.class)
-              .collectList()
-              .block(); // Blocks and waits for the result
-      } catch (Exception e) {
-          System.err.println("Error fetching products: " + e.getMessage());
-          products = Collections.emptyList();
-      }
+        List<Product> products;
+        try {
+            products = productClient.get()
+                .uri(productServiceUrl)
+                .retrieve()
+                .bodyToFlux(Product.class)
+                .collectList()
+                .block();
+        } catch (Exception e) {
+            System.err.println("Error fetching products: " + e.getMessage());
+            products = Collections.emptyList();
+        }
 
-      model.addAttribute("productList", products);
-      return "productList";
-  }
+        response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+        response.setHeader("Pragma", "no-cache");
+        response.setDateHeader("Expires", 0);
+
+        model.addAttribute("productList", products);
+
+
+        String username = (String) session.getAttribute("USERNAME");
+        if (username != null) {
+
+            model.addAttribute("username", username);
+        }
+
+        return "productList";
+    }
+
 
     @GetMapping("/sort-product")
     public String displayProductListSortedByName(@RequestParam(required = false) String message,
                                                  @RequestParam(required = false) String error,
                                                  Model model) {
-
 
         List<Product> sortedList = new ArrayList<>();
         String errorMessage = null;
@@ -95,11 +92,11 @@ public class UIController {
                 .collectList()
                 .block();
         } catch (WebClientResponseException e) {
-            // Handles non-2xx HTTP status codes
+
             errorMessage = "Server error: " + e.getStatusCode() + " - " + e.getResponseBodyAsString();
             e.printStackTrace();
         } catch (WebClientRequestException e) {
-            // Handles network errors, like connection refused
+
             errorMessage = "Connection error: " + e.getMessage();
             e.printStackTrace();
         } catch (Exception e) {
@@ -116,8 +113,6 @@ public class UIController {
     }
 
     @GetMapping("/sort-product-by-description")
-
-
     public String displayProductListSortedByDescription(@RequestParam(required = false) String message,
                                                         @RequestParam(required = false) String error,
                                                         Model model) {
@@ -135,7 +130,6 @@ public class UIController {
     }
 
     @GetMapping("/sort-product-by-category")
-
     public String displayProductListSortedByCategory(@RequestParam(required = false) String message,
                                                      @RequestParam(required = false) String error,
                                                      Model model) {
@@ -152,7 +146,6 @@ public class UIController {
     }
 
     @GetMapping("/sort-product-by-price")
-
     public String displayProductListSortedByPrice(@RequestParam(required = false) String message,
                                                   @RequestParam(required = false) String error,
                                                   Model model) {
@@ -168,12 +161,10 @@ public class UIController {
         return "productList";
     }
 
-    @GetMapping("/delete/{id}")
+    @PostMapping("/delete/{id}")
     public String deleteProduct(@PathVariable() Long id) {
 
-
         try {
-
             productClient.delete()
                 .uri(productServiceUrl + "/{id}", id)
                 .retrieve()
@@ -190,7 +181,7 @@ public class UIController {
         }
     }
 
-    @GetMapping("/sell-product/{id}")
+    @PostMapping("/sell-product/{id}")
     public String sellProduct(@PathVariable Long id, Model model) {
         try {
 
@@ -247,10 +238,21 @@ public class UIController {
     }
 
     @GetMapping("/edit/{id}")
-    public String showEditProductPage(@PathVariable Long id, Model model) {
+    public String showEditProductPage(@PathVariable Long id,
+                                      Model model,
+                                      HttpSession session) {
+
+
+        String jwt = (String) session.getAttribute("JWT_TOKEN");
+
+        if (jwt == null) {
+            return "redirect:/login?error=Please login first";
+        }
+
         try {
             Product product = productClient.get()
-                .uri(productServiceUrl + "{id}", id)
+                .uri(productServiceUrl + "/find/{id}", id)
+                .header("Authorization", "Bearer " + jwt)
                 .retrieve()
                 .bodyToMono(Product.class)
                 .block();
@@ -258,19 +260,24 @@ public class UIController {
             model.addAttribute("productItem", product);
             return "editProduct";
         } catch (WebClientResponseException e) {
+
             return "redirect:/?message=PRODUCT_EDIT_FAILED&error=" + e.getResponseBodyAsString();
-        } catch (Exception e) {
-            return "redirect:/?message=PRODUCT_EDIT_FAILED&error=Unexpected error occurred";
         }
     }
 
     @PostMapping("/edit/{id}")
-    public String editProduct(@PathVariable Long id, Product product) {
+    public String editProduct(@PathVariable Long id, Product product, HttpSession session) {
         try {
+            String jwt = (String) session.getAttribute("JWT_TOKEN");
+            if (jwt == null) {
+                return "redirect:/login?error=Please login first";
+            }
+
             product.setId(id);
 
             productClient.put()
                 .uri(productServiceUrl + "/products/{id}", id)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt)
                 .bodyValue(product)
                 .retrieve()
                 .bodyToMono(Void.class)

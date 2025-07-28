@@ -17,6 +17,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.OptimisticLockingFailureException;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -28,7 +29,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -373,9 +376,9 @@ public class ProductServiceTests {
         Product mappedUpdated = new Product();
 
         doReturn(Optional.of(existing)).when(service).findProductById(1L);
-        when(mapper.productToDAO(existing)).thenReturn(daoToSave);
-        when(repository.save(daoToSave)).thenReturn(daoSaved);
-        when(mapper.productDAOToProduct(daoSaved)).thenReturn(mappedUpdated);
+        when(mapper.productToDAO(any())).thenReturn(daoToSave);
+        when(repository.saveAndFlush(daoToSave)).thenReturn(daoSaved);
+        when(mapper.productDAOToProduct(any())).thenReturn(mappedUpdated);
 
 
         Product result = service.updateProduct(input);
@@ -385,7 +388,7 @@ public class ProductServiceTests {
         assertEquals(input.getQuantity(), existing.getQuantity());
         assertEquals(input.getCategory(), existing.getCategory());
 
-        verify(repository).save(daoToSave);
+        verify(repository).saveAndFlush(daoToSave);
         verify(mapper).productDAOToProduct(daoSaved);
     }
 
@@ -431,20 +434,39 @@ public class ProductServiceTests {
         assertThrows(ProductNotFoundException.class, () -> service.sellProductById(id));
     } */
 
+
     @Test
     void sellProductById_success() {
+        Long productId = 1L;
+        Product product = new Product();
+        product.setId(productId);
+        product.setQuantity(5);
+
+
+        when(repository.findById(productId)).thenReturn(Optional.of(productDAO));
+        when(mapper.productDAOToProduct(productDAO)).thenReturn(product);
+
+        doNothing().when(service).updateProductQuantity(any());
+        service.sellProductById(productId);
+        verify(service).updateProductQuantity(product);
+    }
+    @Test
+    void sellProductById_shouldRetryOnOptimisticLockingFailure() {
         Product product = new Product();
         product.setId(existingProductId);
         product.setQuantity(5);
 
-        when(service.findProductById(existingProductId)).thenReturn(Optional.of(product));
+        doReturn(Optional.of(product)).when(service).findProductById(existingProductId);
+
+        doThrow(new OptimisticLockingFailureException("conflict"))
+            .doThrow(new OptimisticLockingFailureException("conflict"))
+            .doNothing()
+            .when(service).updateProductQuantity(product);
 
         service.sellProductById(existingProductId);
 
-        assertEquals(4, product.getQuantity());
-        verify(service).updateProductQuantity(product);
+        verify(service, times(3)).updateProductQuantity(product);
     }
-
     @Test
     void sellProductById_productNotFound() {
         when(repository.findById(missingProductId)).thenReturn(Optional.empty());

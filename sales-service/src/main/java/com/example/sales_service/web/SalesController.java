@@ -2,7 +2,6 @@ package com.example.sales_service.web;
 
 
 import com.example.sales_service.business.service.SalesService;
-import com.example.sales_service.model.Product;
 import com.example.sales_service.swagger.DescriptionVariables;
 import com.example.sales_service.swagger.HTMLResponseMessages;
 import io.swagger.annotations.Api;
@@ -37,7 +36,7 @@ public class SalesController {
     })
     @PostMapping("/sell-product/{id}")
     public ResponseEntity<Object> sellProduct(@PathVariable Long id) {
-        System.out.println(2);
+
         try {
             salesService.sellProductById(id);
 
@@ -53,6 +52,5 @@ public class SalesController {
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(errorBody);
         }
-
     }
 }

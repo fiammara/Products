@@ -13,23 +13,18 @@
   <section class="container">
     <h3> Sell product </h3>
 
-    <form th:action="${'/sell-product/{id}'}" method="post">
-
-    <div class="input-group mt-2">
-       <!--
-        <label class="input-group-text">Quantity</label>
-       <input class="form-control" th:field="${quantity}" type="text" name="quantityToSell">
-        -->
-
-
-        <a th:href="${'/sell-product/' + product.getId()}" class="btn btn-danger">Sell</a>
-
-
-    </div>
+      <form th:action="@{/sell-product/{id}(id=${product.id})}" method="post">
           <div class="input-group mt-2">
-      <button class="btn btn-primary" type="submit">Sell product</button>
-    </div>
-  </form>
+              <!-- Optional: quantity input if needed -->
+              <!--
+              <label class="input-group-text">Quantity</label>
+              <input class="form-control" type="text" name="quantityToSell" />
+              -->
+          </div>
+          <div class="input-group mt-2">
+              <button class="btn btn-danger" type="submit">Sell product</button>
+          </div>
+      </form>
 
   </section>
 
