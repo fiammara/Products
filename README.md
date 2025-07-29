@@ -7,11 +7,12 @@ This project consists of multiple services working together with modern cloud-na
 
 ## 🏗️ Project Structure
 
-| Service           | Description                                                                 |
-|-------------------|-----------------------------------------------------------------------------|
+| Service             | Description                                                                     |
+|---------------------|---------------------------------------------------------------------------------|
 | **ui-service**      | Spring Boot service providing the UI layer and REST APIs for product management |
-| **product-service** | Core service managing product data and business logic                       |
-| **sales-service**   | Handles sales transactions, orders, and related operations                  |
+| **product-service** | Core service managing product data and business logic                           |
+| **sales-service**   | Handles sales transactions, orders, and related operations                      |
+| **user-service**    | Handles user login and logout                                                   |
 
 ---
 
@@ -22,7 +23,8 @@ This project consists of multiple services working together with modern cloud-na
 - Containerized deployment via **Docker** and orchestration with **Kubernetes**  
 - Monitoring and alerting with **Prometheus**  
 - Configuration management via environment variables and Docker Compose/Kubernetes manifests  
-- RESTful APIs across services for clean separation of concerns  
+- RESTful APIs across services for clean separation of concerns 
+- Spring security
 
 ---
 
@@ -50,6 +52,10 @@ docker compose up --build
 
 This will launch **ui-service**, **product-service**, **sales-service**, Kafka, and other dependencies defined in `docker-compose.yml`.
 
+Starting page:
+http://localhost:8080
+
+Hardcoded sample user login: email: ra@ra.com  password: admin
 ---
 
 ### Deploying on Kubernetes

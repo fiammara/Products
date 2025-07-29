@@ -8,7 +8,7 @@ import com.example.user_service.model.CreateUserRequest;
 import com.example.user_service.model.UpdateUserRequest;
 import com.example.user_service.model.User;
 import com.example.user_service.swagger.DescriptionVariables;
-import io.swagger.annotations.Api;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 
 import java.util.List;
-@Api(tags = {DescriptionVariables.USER})
+@Tag(name = DescriptionVariables.USER)
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
@@ -57,13 +57,10 @@ public class UserController {
         return ResponseEntity.ok(userService.updateUser(id, request));
     }
 
-
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deactivateUser(@PathVariable Long id) {
         userService.deactivateUser(id);
         return ResponseEntity.noContent().build();
     }
-
-
 
 }

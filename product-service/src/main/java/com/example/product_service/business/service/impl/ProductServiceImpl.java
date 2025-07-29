@@ -14,12 +14,14 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
+
 
 @Service
 @Log4j2
@@ -43,8 +45,9 @@ public class ProductServiceImpl implements ProductService {
         log.info("Got product list. Size is: {}", productDAOList.size());
         return productDAOList.stream()
             .map(productMapper::productDAOToProduct)
-            .collect(Collectors.toList());
+            .toList();
     }
+
 
     @Override
     public List<Product> getProductsSortedByName() {
@@ -53,7 +56,7 @@ public class ProductServiceImpl implements ProductService {
         return productDAOList.stream()
             .map(productMapper::productDAOToProduct)
             .sorted(Comparator.comparing(Product::getName))
-            .collect(Collectors.toList());
+            .toList();
 
     }
 
@@ -64,7 +67,7 @@ public class ProductServiceImpl implements ProductService {
         return productDAOList.stream()
             .map(productMapper::productDAOToProduct)
             .sorted(Comparator.comparing(Product::getPrice))
-            .collect(Collectors.toList());
+            .toList();
 
     }
 
@@ -75,7 +78,7 @@ public class ProductServiceImpl implements ProductService {
         return listByDescription.stream()
             .map(productMapper::productDAOToProduct)
             .sorted(new ProductComparatorByDescription())
-            .collect(Collectors.toList());
+            .toList();
     }
 
     @Override
@@ -87,7 +90,7 @@ public class ProductServiceImpl implements ProductService {
         List<Product> sortedProducts = listByCategory.stream()
             .map(productMapper::productDAOToProduct)
             .sorted(new ProductComparatorByCategory())
-            .collect(Collectors.toList());
+            .toList();
         log.info("Returning {} products sorted by category", sortedProducts.size());
         return sortedProducts;
     }
@@ -173,7 +176,7 @@ public class ProductServiceImpl implements ProductService {
         log.info("Got product list by keyword '{}'. Size is: {}", keyword, productDAOList.size());
         return productDAOList.stream()
             .map(productMapper::productDAOToProduct)
-            .collect(Collectors.toList());
+            .toList();
     }
 
     @Override
@@ -200,6 +203,19 @@ public class ProductServiceImpl implements ProductService {
 
             }
         }
+    }
+
+    public List<Product> getProductsSorted(String sortBy) {
+
+        if (!StringUtils.hasText(sortBy)) {
+            sortBy = "name";
+        }
+
+        List<ProductDAO> allProducts = productRepository.findAll(Sort.by(sortBy));
+
+        return allProducts.stream()
+            .map(productMapper::productDAOToProduct)
+            .toList();
     }
 
 }

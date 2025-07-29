@@ -2,6 +2,8 @@ package com.example.products.web;
 
 import com.example.products.LoginResponse;
 import jakarta.servlet.http.HttpSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
@@ -10,23 +12,40 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.Map;
 
 @Controller
 public class LoginController {
 
-    private final WebClient authClient;
-    @Value("${user.service.auth-path}")
-    private String userServiceUrl;
+    private static final Logger logger = LoggerFactory.getLogger(LoginController.class);
 
-    public LoginController(@Qualifier("authWebClient") WebClient userClient) {
-        this.authClient = userClient;
+    private final WebClient authClient;
+    private final String userServiceLoginUrl;
+
+    private static final String SESSION_JWT = "JWT_TOKEN";
+    private static final String SESSION_USERNAME = "USERNAME";
+    private static final String FLASH_ERROR = "errorMessage";
+
+    public LoginController(@Qualifier("authWebClient") WebClient authClient,
+                           @Value("${user.service.auth-path}") String userServiceUrl) {
+        this.authClient = authClient;
+        this.userServiceLoginUrl = userServiceUrl + "/login";
     }
 
     @GetMapping("/login")
-    public String showLoginForm() {
+    public String showLoginForm(@RequestParam(value = "error", required = false) String error,
+                                HttpSession session,
+                                Model model) {
+        if (session.getAttribute(SESSION_JWT) != null) {
+            return "redirect:/";
+        }
 
+        if (error != null) {
+            model.addAttribute(FLASH_ERROR, "Invalid username or password");
+        }
         return "login";
     }
 
@@ -34,41 +53,57 @@ public class LoginController {
     public String processLogin(@RequestParam String username,
                                @RequestParam String password,
                                HttpSession session,
-                               Model model) {
+                               RedirectAttributes redirectAttributes) {
+
+        if (isInvalid(username) || isInvalid(password)) {
+            redirectAttributes.addFlashAttribute(FLASH_ERROR, "Username and password must not be empty");
+            return "redirect:/login";
+        }
 
         try {
+            logger.info("Login attempt for user: {}", username);
 
             LoginResponse loginResponse = authClient.post()
-                .uri(userServiceUrl + "/login")
+                .uri(userServiceLoginUrl)
                 .bodyValue(Map.of("email", username, "password", password))
                 .retrieve()
                 .bodyToMono(LoginResponse.class)
                 .block();
 
             if (loginResponse != null && loginResponse.getToken() != null) {
-                session.setAttribute("JWT_TOKEN", loginResponse.getToken());
-                session.setAttribute("USERNAME", loginResponse.getEmail());
-
+                session.setAttribute(SESSION_JWT, loginResponse.getToken());
+                session.setAttribute(SESSION_USERNAME, loginResponse.getEmail());
+                logger.info("User {} logged in successfully", username);
                 return "redirect:/";
             } else {
-
-                return "redirect:/";
+                logger.warn("Login failed: empty token received for user {}", username);
+                redirectAttributes.addFlashAttribute(FLASH_ERROR, "Login failed. Please try again.");
+                return "redirect:/login";
             }
-
+        } catch (WebClientResponseException e) {
+            logger.warn("Login failed for user {}: {}", username, e.getResponseBodyAsString());
+            redirectAttributes.addFlashAttribute(FLASH_ERROR, "Invalid credentials.");
+            return "redirect:/login";
         } catch (Exception e) {
-
-            return "redirect:/";
+            logger.error("Unexpected login error for user {}: {}", username, e.getMessage(), e);
+            redirectAttributes.addFlashAttribute(FLASH_ERROR, "An internal error occurred.");
+            return "redirect:/login";
         }
     }
 
     @GetMapping("/logout")
     public String logout(HttpSession session) {
         session.invalidate();
-        return "redirect:/";
+        return "redirect:/login?logout";
     }
 
+
     @GetMapping("/home")
-    public String homePage(Model model) {
+    public String homePage() {
         return "productList";
+    }
+
+    private boolean isInvalid(String input) {
+        return input == null || input.isBlank();
     }
 }

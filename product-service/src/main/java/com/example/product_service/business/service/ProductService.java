@@ -35,4 +35,6 @@ public interface ProductService {
     List<Product> findProductsByKeyword(String keyword);
 
     void sellProductById(Long id);
+
+    List<Product> getProductsSorted(String sortBy);
 }

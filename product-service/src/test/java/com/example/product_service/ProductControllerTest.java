@@ -32,6 +32,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -50,17 +51,21 @@ public class ProductControllerTest {
     private ProductService service;
 
     @Test
-    void shouldReturnAllProductsSuccessfully() throws Exception {
-        List<Product> productList = createProductList();
+    void shouldReturnListOfProducts_whenProductsExist() throws Exception {
 
-        when(service.getAllProducts()).thenReturn(productList);
+        Product createdProduct = new Product();
+        createdProduct.setId(1L);
+        createdProduct.setName("MN");
+        createdProduct.setDescription("Modern");
+        createdProduct.setPrice(250);
+        List<Product> productList = List.of(createdProduct);
 
-        this.mockMvc.perform(get("/api/products")
+        when(service.getProductsSorted(null)).thenReturn(productList);
+
+        mockMvc.perform(get("/api/products")
                 .contentType(MediaType.APPLICATION_JSON))
-            .andDo(print())
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.length()").value(productList.size()))
-            .andExpect(jsonPath("$[0].name").value(productList.get(0).getName()));
+            .andExpect(content().json(objectMapper.writeValueAsString(productList)));
     }
 
     @Test
