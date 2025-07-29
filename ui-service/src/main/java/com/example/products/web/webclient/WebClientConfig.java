@@ -1,4 +1,4 @@
-package com.example.products.web;
+package com.example.products.web.webclient;
 
 
 import org.springframework.beans.factory.annotation.Qualifier;

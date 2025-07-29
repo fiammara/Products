@@ -10,8 +10,6 @@ import org.springframework.context.annotation.Configuration;
 public class Config {
 
 
-
-
     @Bean
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
@@ -20,7 +18,5 @@ public class Config {
                 .version("1.0")
                 .description("Product management system API"));
     }
-
-
 
 }

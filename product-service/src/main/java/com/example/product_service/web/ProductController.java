@@ -12,7 +12,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
-import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -58,12 +57,13 @@ public class ProductController {
     @GetMapping("/find/{id}")
     public ResponseEntity<Product> getProductById(
         @Parameter(description = "ID of the product to retrieve", required = true)
-        @PathVariable Long id) throws Exception {
+        @PathVariable Long id) {
 
         log.info("Request received: Get product by ID {}", id);
+
         Optional<Product> product = productService.findProductById(id);
         return product.map(ResponseEntity::ok)
-            .orElse(ResponseEntity.notFound().build());
+            .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @GetMapping
@@ -81,7 +81,10 @@ public class ProductController {
 
         log.info("Fetching all products with sort: {}", sortBy);
         List<Product> products = productService.getProductsSorted(sortBy);
-
+        List<String> allowedSortFields = List.of("name", "category", "price", "description");
+        if (sortBy != null && !allowedSortFields.contains(sortBy)) {
+            return ResponseEntity.badRequest().build();
+        }
         if (products.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
@@ -123,7 +126,7 @@ public class ProductController {
             description = "Product object to create",
             required = true
         )
-        @Valid @RequestBody Product product) throws Exception {
+        @Valid @RequestBody Product product) {
 
         log.info("Request received to create a new product: {}", product);
         Product created = productService.createProduct(product);
@@ -131,7 +134,6 @@ public class ProductController {
         return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
 
-    @SneakyThrows
     @PutMapping("/products/{id}")
     @Operation(
         summary = "Update an existing product",
@@ -176,6 +178,7 @@ public class ProductController {
         @RequestParam String keyword) {
 
         log.info("Searching products with keyword: {}", keyword);
+
         List<Product> results = productService.findProductsByKeyword(keyword);
 
         if (results.isEmpty()) {

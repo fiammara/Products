@@ -3,6 +3,8 @@ package com.example.products;
 import com.example.products.model.Category;
 import com.example.products.model.Product;
 import com.example.products.web.UIController;
+import com.example.products.web.webclient.ProductService;
+import com.example.products.web.webclient.SalesService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

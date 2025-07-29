@@ -6,7 +6,9 @@ import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.validation.FieldError;
@@ -55,11 +57,24 @@ public class GlobalExceptionHandler {
         String message = "Malformed JSON request";
         return ResponseEntity.badRequest().body(message);
     }
+
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<String> handleAllExceptions(Exception ex) {
+    public ResponseEntity<String> handleGeneralException(Exception ex) {
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .body("Internal server error");
+            .body("An unexpected error occurred: " + ex.getMessage());
+    }
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<String> handleMissingParams(MissingServletRequestParameterException ex) {
+        String message = "Missing required query parameter: " + ex.getParameterName();
+        return ResponseEntity.badRequest().body(message);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<String> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        String param = ex.getName();
+        String expectedType = ex.getRequiredType() != null ? ex.getRequiredType().getSimpleName() : "unknown";
+        return ResponseEntity.badRequest().body("Invalid value for parameter '" + param + "'. Expected type: " + expectedType);
     }
 
 }

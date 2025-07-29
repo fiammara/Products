@@ -1,8 +1,8 @@
 package com.example.products.web;
 
 
-import com.example.products.ProductService;
-import com.example.products.SalesService;
+import com.example.products.web.webclient.ProductService;
+import com.example.products.web.webclient.SalesService;
 import com.example.products.UserSession;
 import com.example.products.model.Product;
 import jakarta.servlet.http.HttpServletResponse;

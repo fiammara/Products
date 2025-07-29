@@ -1,4 +1,4 @@
-package com.example.products;
+package com.example.products.web.webclient;
 
 import com.example.products.model.Product;
 import org.springframework.beans.factory.annotation.Value;

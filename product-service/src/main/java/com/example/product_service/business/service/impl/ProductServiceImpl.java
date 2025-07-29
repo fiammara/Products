@@ -1,8 +1,6 @@
 package com.example.product_service.business.service.impl;
 
 
-import com.example.product_service.business.comparators.ProductComparatorByCategory;
-import com.example.product_service.business.comparators.ProductComparatorByDescription;
 import com.example.product_service.business.handlers.InsufficientStockException;
 import com.example.product_service.business.handlers.ProductNotFoundException;
 import com.example.product_service.business.mappers.ProductMapStructMapper;
@@ -11,14 +9,12 @@ import com.example.product_service.business.repository.model.ProductDAO;
 import com.example.product_service.business.service.ProductService;
 import com.example.product_service.model.Product;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,7 +31,6 @@ public class ProductServiceImpl implements ProductService {
                               ProductMapStructMapper productMapper) {
         this.productRepository = productRepository;
         this.productMapper = productMapper;
-
     }
 
     @Override
@@ -50,70 +45,40 @@ public class ProductServiceImpl implements ProductService {
 
 
     @Override
-    public List<Product> getProductsSortedByName() {
+    public List<Product> getProductsSorted(String sortBy) {
+        if (!StringUtils.hasText(sortBy)) {
+            sortBy = "name";
+        }
+        Sort sort = Sort.by(sortBy);
 
-        List<ProductDAO> productDAOList = productRepository.findAll();
-        return productDAOList.stream()
+        List<ProductDAO> productDAOs = productRepository.findAll(sort);
+
+        return productDAOs.stream()
             .map(productMapper::productDAOToProduct)
-            .sorted(Comparator.comparing(Product::getName))
-            .toList();
-
-    }
-
-    @Override
-    public List<Product> getProductsSortedByPrice() {
-
-        List<ProductDAO> productDAOList = productRepository.findAll();
-        return productDAOList.stream()
-            .map(productMapper::productDAOToProduct)
-            .sorted(Comparator.comparing(Product::getPrice))
-            .toList();
-
-    }
-
-    @Override
-    public List<Product> getProductsSortedByDescription() {
-
-        List<ProductDAO> listByDescription = productRepository.findAll();
-        return listByDescription.stream()
-            .map(productMapper::productDAOToProduct)
-            .sorted(new ProductComparatorByDescription())
             .toList();
     }
 
-    @Override
-    public List<Product> getProductsSortedByCategory() {
-
-        List<ProductDAO> listByCategory = productRepository.findAll();
-        log.info("Fetched {} products from repository for sorting by category", listByCategory.size());
-
-        List<Product> sortedProducts = listByCategory.stream()
-            .map(productMapper::productDAOToProduct)
-            .sorted(new ProductComparatorByCategory())
-            .toList();
-        log.info("Returning {} products sorted by category", sortedProducts.size());
-        return sortedProducts;
-    }
 
     @Override
-    public Product createProduct(@Valid Product product) {
+    public Product createProduct(Product product) {
 
         product.setQuantity(product.getInitialQuantity());
-        ProductDAO productDAOSaved = productRepository.save(productMapper.productToDAO(product));
-        log.info("Repository saved product DAO: {}", productDAOSaved);
-        return productMapper.productDAOToProduct(productDAOSaved);
+
+        ProductDAO savedDAO = productRepository.save(productMapper.productToDAO(product));
+        log.info("Created product with ID: {}", savedDAO.getId());
+
+        return productMapper.productDAOToProduct(savedDAO);
 
     }
 
     @Override
     public Optional<Product> findProductById(Long id) {
-
         Optional<Product> productOptional =
-            productRepository.findById(id).flatMap(product -> Optional.ofNullable(productMapper.productDAOToProduct(product)));
+            productRepository.findById(id)
+                .map(productMapper::productDAOToProduct);
 
         log.info("Product with id {} is {}", id, productOptional);
         return productOptional;
-
     }
 
     @Override
@@ -124,6 +89,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Transactional
+    @Override
     public void updateProductQuantity(Product product) {
         ProductDAO dao = productRepository.findById(product.getId())
             .orElseThrow(() -> new ProductNotFoundException("Product not found: " + product.getId()));
@@ -203,19 +169,6 @@ public class ProductServiceImpl implements ProductService {
 
             }
         }
-    }
-
-    public List<Product> getProductsSorted(String sortBy) {
-
-        if (!StringUtils.hasText(sortBy)) {
-            sortBy = "name";
-        }
-
-        List<ProductDAO> allProducts = productRepository.findAll(Sort.by(sortBy));
-
-        return allProducts.stream()
-            .map(productMapper::productDAOToProduct)
-            .toList();
     }
 
 }

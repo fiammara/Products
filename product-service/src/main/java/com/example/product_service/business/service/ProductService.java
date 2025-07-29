@@ -12,23 +12,16 @@ public interface ProductService {
 
     List<Product> getAllProducts();
 
-    List<Product> getProductsSortedByName();
 
-    List<Product> getProductsSortedByPrice();
+    Product createProduct(Product product);
 
-    List<Product> getProductsSortedByDescription();
-
-    List<Product> getProductsSortedByCategory();
-
-    Product createProduct(Product product) throws Exception;
-
-    Optional<Product> findProductById(Long id) throws Exception;
+    Optional<Product> findProductById(Long id);
 
     void deleteProduct(Long id);
 
     void updateProductQuantity(Product product);
 
-    Product updateProduct(Product product) throws Exception;
+    Product updateProduct(Product product);
 
     Optional<Product> findProductByName(String name);
 
